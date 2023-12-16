@@ -1,6 +1,4 @@
-﻿using TbdDevelop.Kafka.Extensions.Contracts;
-
-namespace TbdDevelop.Kafka.Extensions.Infrastructure;
+﻿namespace TbdDevelop.Kafka.Abstractions;
 
 public abstract class DefaultEvent : IEvent
 {

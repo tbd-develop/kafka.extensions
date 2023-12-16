@@ -1,4 +1,5 @@
 ﻿using events;
+using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Contracts;
 
 namespace consumer_sample.Handlers;

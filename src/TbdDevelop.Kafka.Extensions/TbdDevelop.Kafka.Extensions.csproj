@@ -13,4 +13,8 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\TbdDevelop.Kafka.Abstractions\TbdDevelop.Kafka.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

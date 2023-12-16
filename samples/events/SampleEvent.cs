@@ -1,4 +1,4 @@
-﻿using TbdDevelop.Kafka.Extensions.Infrastructure;
+﻿using TbdDevelop.Kafka.Abstractions;
 
 namespace events;
 

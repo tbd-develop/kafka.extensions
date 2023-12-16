@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Abstractions\TbdDevelop.Kafka.Abstractions.csproj" />
       <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Extensions\TbdDevelop.Kafka.Extensions.csproj" />
       <ProjectReference Include="..\events\events.csproj" />
     </ItemGroup>

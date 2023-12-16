@@ -1,4 +1,4 @@
-﻿namespace TbdDevelop.Kafka.Extensions.Contracts;
+﻿namespace TbdDevelop.Kafka.Abstractions;
 
 public interface IEventReceiver<in TEvent>
     where TEvent : IEvent

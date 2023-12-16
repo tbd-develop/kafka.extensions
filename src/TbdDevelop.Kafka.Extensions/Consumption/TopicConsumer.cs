@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Contracts;
 using TbdDevelop.Kafka.Extensions.Deserializers;
 
