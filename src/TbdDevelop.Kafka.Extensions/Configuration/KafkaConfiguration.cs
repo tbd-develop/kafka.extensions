@@ -2,7 +2,7 @@
 
 public sealed class KafkaConfiguration
 {
-    private Dictionary<Type, string?>? _topicsLookup;
+    private Dictionary<Type, string>? _topicsLookup;
 
     public IDictionary<string, string> Producer { get; set; } = null!;
     public IDictionary<string, string> Consumer { get; set; } = null!;
