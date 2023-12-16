@@ -93,11 +93,12 @@ services.AddKafka(builder => {
 });
 ```
 
-Your handlers should be added to DI before kafka configuration, i.e;
+Your handlers should be added to DI before kafka configuration, only a single instance of the handler needs 
+be registered, as a service will start per handler i.e;
 
 ```csharp
-services.AddTransient<ExampleEventHandler>();
-services.AddTransient<AnotherEventHandler>();
+services.AddSingleton<ExampleEventHandler>();
+services.AddSingleton<AnotherEventHandler>();
 ```
 
 But, once configured, when the consumers are started, and an event is received then they'll be dispatched to the handlers.
