@@ -15,7 +15,11 @@ public class DispatchingKafkaConsumer : IEventConsumer
     {
         var tasks = _consumers
             .Select(consumer =>
-                Task.Run(async () => await consumer.Consume(cancellationToken), cancellationToken)).ToList();
+                Task
+                    .Factory
+                    .StartNew(async () => await consumer.Consume(cancellationToken)
+                        , TaskCreationOptions.LongRunning)
+            ).ToList();
 
         await Task.WhenAll(tasks);
     }

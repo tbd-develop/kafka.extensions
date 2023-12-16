@@ -9,6 +9,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{24819488-7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Services", "src\TbdDevelop.Kafka.Services\TbdDevelop.Kafka.Services.csproj", "{9BBDDAFB-812E-4474-AF6F-54B66A8CCF59}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{18817C3F-96E4-4A58-8778-BD48E1DC8E93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "producer-sample", "samples\producer-sample\producer-sample.csproj", "{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "events", "samples\events\events.csproj", "{2BA11A11-1824-418C-A0C7-D7B8498B3F57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,5 +29,17 @@ Global
 		{9BBDDAFB-812E-4474-AF6F-54B66A8CCF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BBDDAFB-812E-4474-AF6F-54B66A8CCF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BBDDAFB-812E-4474-AF6F-54B66A8CCF59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BA11A11-1824-418C-A0C7-D7B8498B3F57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BA11A11-1824-418C-A0C7-D7B8498B3F57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BA11A11-1824-418C-A0C7-D7B8498B3F57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BA11A11-1824-418C-A0C7-D7B8498B3F57}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
+		{2BA11A11-1824-418C-A0C7-D7B8498B3F57} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 	EndGlobalSection
 EndGlobal
