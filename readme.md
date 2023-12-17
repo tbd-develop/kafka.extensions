@@ -81,24 +81,23 @@ of IEvent to use as a base class.
 
 #### Consuming (Consumers)
 
-If you want to configure your application to consume events, then you need to add the consumer components. So, in your
-services configuration for Dependency Injection, you need
+If you want to configure your application to consume events, then you need to add the consumer components. For each event you wish to receive, 
+you need to register a receiver. In your services configuration for Dependency Injection, you need
 
 ```csharp
 services.AddKafka(builder => {
     builder.AddDispatchingConsumer( configure => {
-            configure.AddEventReceiver<ExampleEvent, ExampleEventHandler>();
-            configure.AddEventReceiver<AnotherEvent, AnotherEventHandler>();
+            configure.AddEventReceiver<ExampleEvent, ExampleEventReceiver>();
+            configure.AddEventReceiver<AnotherEvent, AnotherEventReceiver>();
     });    
 });
 ```
-
-Your handlers should be added to DI before kafka configuration, only a single instance of the handler needs 
-be registered, as a service will start per handler i.e;
+Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons 
+as each receiver will be attached to a single running consumer process. 
 
 ```csharp
-services.AddSingleton<ExampleEventHandler>();
-services.AddSingleton<AnotherEventHandler>();
+services.AddSingleton<ExampleEventReceiver>();
+services.AddSingleton<AnotherEventReceiver>();
 ```
 
 But, once configured, when the consumers are started, and an event is received then they'll be dispatched to the handlers.

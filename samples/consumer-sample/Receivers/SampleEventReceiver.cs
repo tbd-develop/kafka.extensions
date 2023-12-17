@@ -1,10 +1,9 @@
 ﻿using events;
 using TbdDevelop.Kafka.Abstractions;
-using TbdDevelop.Kafka.Extensions.Contracts;
 
 namespace consumer_sample.Handlers;
 
-public class SampleEventHandler : IEventReceiver<SampleEvent>
+public class SampleEventReceiver : IEventReceiver<SampleEvent>
 {
     public Task ReceiveAsync(SampleEvent @event, CancellationToken cancellationToken = default)
     {

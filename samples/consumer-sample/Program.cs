@@ -10,13 +10,13 @@ using TbdDevelop.Kafka.Services.Infrastructure;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices(services =>
     {
-        services.AddSingleton<SampleEventHandler>();
+        services.AddSingleton<SampleEventReceiver>();
 
         services.AddKafka(builder =>
         {
             builder.AddDispatchingConsumer(configure =>
             {
-                configure.AddEventReceiver<SampleEvent, SampleEventHandler>();
+                configure.AddEventReceiver<SampleEvent, SampleEventReceiver>();
             });
 
             builder.AddBasicWorkerService();
