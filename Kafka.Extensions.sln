@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "consumer-sample", "samples\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Abstractions", "src\TbdDevelop.Kafka.Abstractions\TbdDevelop.Kafka.Abstractions.csproj", "{2547DDD6-A545-412D-B1F2-CE622C27D937}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "outbox-sample", "samples\outbox-sample\outbox-sample.csproj", "{52FE0675-768A-4A8B-AD73-AE074BEE473B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Outbox", "src\TbdDevelop.Kafka.Outbox\TbdDevelop.Kafka.Outbox.csproj", "{15866A0F-90DC-46F1-A61F-DE37ED703ED8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,10 +53,19 @@ Global
 		{2547DDD6-A545-412D-B1F2-CE622C27D937}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2547DDD6-A545-412D-B1F2-CE622C27D937}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2547DDD6-A545-412D-B1F2-CE622C27D937}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52FE0675-768A-4A8B-AD73-AE074BEE473B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52FE0675-768A-4A8B-AD73-AE074BEE473B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52FE0675-768A-4A8B-AD73-AE074BEE473B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52FE0675-768A-4A8B-AD73-AE074BEE473B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15866A0F-90DC-46F1-A61F-DE37ED703ED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15866A0F-90DC-46F1-A61F-DE37ED703ED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15866A0F-90DC-46F1-A61F-DE37ED703ED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15866A0F-90DC-46F1-A61F-DE37ED703ED8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 		{2BA11A11-1824-418C-A0C7-D7B8498B3F57} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 		{250637C3-3316-45A8-8E71-EDE1AB72AEDA} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
+		{52FE0675-768A-4A8B-AD73-AE074BEE473B} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 	EndGlobalSection
 EndGlobal

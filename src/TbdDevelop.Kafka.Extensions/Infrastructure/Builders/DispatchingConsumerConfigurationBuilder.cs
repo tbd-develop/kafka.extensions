@@ -2,9 +2,10 @@
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
+using TbdDevelop.Kafka.Extensions.Consumption;
 using TbdDevelop.Kafka.Extensions.Contracts;
 
-namespace TbdDevelop.Kafka.Extensions.Consumption.Builders;
+namespace TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
 public class DispatchingConsumerConfigurationBuilder
 {

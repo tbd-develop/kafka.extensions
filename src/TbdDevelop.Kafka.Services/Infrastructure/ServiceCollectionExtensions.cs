@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
+using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Services.Infrastructure;
 

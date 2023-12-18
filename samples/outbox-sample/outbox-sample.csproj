@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>outbox_sample</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Abstractions\TbdDevelop.Kafka.Abstractions.csproj" />
+      <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Extensions\TbdDevelop.Kafka.Extensions.csproj" />
+      <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Outbox\TbdDevelop.Kafka.Outbox.csproj" />
+      <ProjectReference Include="..\events\events.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    </ItemGroup>
+
+</Project>
