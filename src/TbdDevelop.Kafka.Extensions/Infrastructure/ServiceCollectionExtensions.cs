@@ -1,11 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
-using TbdDevelop.Kafka.Extensions.Consumption.Builders;
-using TbdDevelop.Kafka.Extensions.Contracts;
-using TbdDevelop.Kafka.Extensions.Publishing;
+using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Extensions.Infrastructure;
 
@@ -30,39 +26,12 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
-}
 
-public class KafkaInstanceBuilder(IServiceCollection services)
-{
-    public KafkaInstanceBuilder AddDefaultPublisher()
+    public static void GuardAlreadyRegistered<TService>(this IServiceCollection services, string message)
     {
-        services.AddTransient<IEventPublisher, KafkaPublisher>();
-
-        return this;
-    }
-
-    public KafkaInstanceBuilder AddDispatchingConsumer(Action<DispatchingConsumerConfigurationBuilder> configure)
-    {
-        services.AddSingleton<IEventConsumer>((provider) =>
+        if (services.Any(s => s.ServiceType == typeof(TService)))
         {
-            var builder =
-                new DispatchingConsumerConfigurationBuilder(
-                    provider,
-                    provider.GetRequiredService<ILoggerFactory>(),
-                    provider.GetRequiredService<KafkaConfiguration>());
-
-            configure(builder);
-
-            return builder.Build();
-        });
-
-        return this;
-    }
-
-    public KafkaInstanceBuilder Register(Action<IServiceCollection> register)
-    {
-        register(services);
-
-        return this;
+            throw new InvalidOperationException(message);
+        }
     }
 }
