@@ -1,4 +1,6 @@
-## Kakfa Extensions
+## Kakfa Extensions 
+
+[![Release to Nuget](https://github.com/tbd-develop/kafka.extensions/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/tbd-develop/kafka.extensions/actions/workflows/release.yml)
 
 This library contains a set of tools I use often to work with Apache Kafka. More specifically, 
 it's build off of the Confluent Kafka library. 
