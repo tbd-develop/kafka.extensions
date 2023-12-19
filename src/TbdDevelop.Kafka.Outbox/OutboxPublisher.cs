@@ -1,5 +1,4 @@
 ﻿using TbdDevelop.Kafka.Abstractions;
-using TbdDevelop.Kafka.Extensions.Contracts;
 using TbdDevelop.Kafka.Outbox.Contracts;
 
 namespace TbdDevelop.Kafka.Outbox;

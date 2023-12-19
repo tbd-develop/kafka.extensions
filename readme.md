@@ -114,4 +114,27 @@ services.AddKafka(builder => {
 });
 ```
 
-This will add a hosted service and then start consuming when the service starts. 
+This will add a hosted service and then start consuming when the service starts.
+
+### Outbox
+
+The outbox is a pattern for ensuring that messages are published to Kafka, and then processed by the consumer.
+
+To configure using Outbox instead of using the DefaultPublisher, you need to add the following to your configuration;
+
+```csharp
+ services.AddKafka(builder =>
+        {
+            builder
+                .AddOutbox(configure =>
+                {
+                    configure
+                        .UseInMemoryOutbox()
+                        .WithDefaultPublisher();
+                });
+        });
+```
+
+Right now, the only outbox implementation is in memory. We still use the default publisher, but this is handled by the outbox now.
+
+If you try and use the default publisher and the outbox, you will get an exception at run time.
