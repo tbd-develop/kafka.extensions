@@ -23,5 +23,7 @@ jobs:
       run: dotnet pack ./src/TbdDevelop.Kafka.Extensions/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
     - name: Pack Services
       run: dotnet pack ./src/TbdDevelop.Kafka.Services/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+    - name: Pack Outbox
+      run: dotnet pack ./src/TbdDevelop.Kafka.Outbox/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .      
     - name: Push To Nuget
       run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
