@@ -5,7 +5,13 @@ using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 
 var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services => { services.AddKafka(builder => { builder.AddDefaultPublisher(); }); })
+    .ConfigureServices(services =>
+    {
+        services.AddKafka(builder =>
+        {
+            builder.AddDefaultPublisher();
+        });
+    })
     .Build();
 
 var publisher = host.Services.GetRequiredService<IEventPublisher>();

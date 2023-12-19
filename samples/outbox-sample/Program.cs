@@ -23,6 +23,6 @@ var host = Host.CreateDefaultBuilder()
 
 var publisher = host.Services.GetRequiredService<IEventPublisher>();
 
-await publisher.PublishAsync(new SampleEvent { SomeValue = "Hello World", SomeOtherValue = 42 });
+await publisher.PublishAsync(new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 101 });
 
 await host.RunAsync();

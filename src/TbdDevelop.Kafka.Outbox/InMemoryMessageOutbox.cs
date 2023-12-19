@@ -1,21 +1,38 @@
 ﻿using System.Collections.Concurrent;
 using TbdDevelop.Kafka.Abstractions;
-using TbdDevelop.Kafka.Extensions.Contracts;
+using TbdDevelop.Kafka.Outbox.Contracts;
 
 namespace TbdDevelop.Kafka.Outbox;
 
 public class InMemoryMessageOutbox : IMessageOutbox
 {
-    private readonly ConcurrentQueue<IEvent> _queue = new();
+    private readonly ConcurrentDictionary<Guid, IOutboxMessage> _outbox = new();
 
-    public async Task EnqueueAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
-        await Task.Run(() => { _queue.Enqueue(@event); }, cancellationToken);
+        await Task.Run(() =>
+        {
+            var message = new OutboxMessage<TEvent>(@event);
+
+            _outbox.TryAdd(message.Identifier, message);
+        }, cancellationToken);
     }
 
-    public async Task<IEvent?> DequeueAsync(CancellationToken cancellationToken = default)
+    public Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
     {
-        return await Task.Run(() => _queue.TryDequeue(out var @event) ? @event : null, cancellationToken);
+        return Task.Run(() =>
+        {
+            var nextMessage = (from message in _outbox.Values
+                orderby message.AddedOn
+                select message).FirstOrDefault();
+
+            return nextMessage;
+        }, cancellationToken);
+    }
+
+    public Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => { _outbox.TryRemove(message.Identifier, out _); }, cancellationToken);
     }
 }

@@ -1,9 +1,9 @@
-﻿using Confluent.Kafka;
+﻿using System.Reflection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
-using TbdDevelop.Kafka.Extensions.Contracts;
 using TbdDevelop.Kafka.Extensions.Publishing;
+using TbdDevelop.Kafka.Outbox.Contracts;
 
 namespace TbdDevelop.Kafka.Outbox;
 
@@ -14,29 +14,35 @@ public class OutboxService(
 {
     private const int DefaultDelayTimeMs = 25;
     private const int BackoffIntervalMs = 1000;
+    private const int MaxBackOffIntervalMs = 10000;
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var delayTimeMs = DefaultDelayTimeMs;
+
         return Task.Factory.StartNew(async () =>
         {
-            int delayTimeMs = DefaultDelayTimeMs;
-
             do
             {
                 try
                 {
-                    var message = await outbox.DequeueAsync(stoppingToken);
+                    var message = await outbox.RetrieveNextMessage(stoppingToken);
 
                     if (message is null)
                         continue;
 
-                    await publisher.PublishAsync(message, stoppingToken);
+                    await PublishMessage(message, stoppingToken);
+
+                    await outbox.Commit(message, stoppingToken);
 
                     delayTimeMs = DefaultDelayTimeMs;
                 }
                 catch (Exception exception)
                 {
-                    delayTimeMs += BackoffIntervalMs;
+                    if (delayTimeMs < MaxBackOffIntervalMs)
+                    {
+                        delayTimeMs += BackoffIntervalMs;
+                    }
 
                     logger.LogError(exception, "Error while publishing message. Backing off for {BackoffIntervalMs}ms",
                         BackoffIntervalMs);
@@ -45,5 +51,28 @@ public class OutboxService(
                 await Task.Delay(delayTimeMs, stoppingToken);
             } while (!stoppingToken.IsCancellationRequested);
         }, TaskCreationOptions.LongRunning | TaskCreationOptions.AttachedToParent);
+    }
+
+    private async Task PublishMessage(IOutboxMessage message, CancellationToken cancellationToken)
+    {
+        var type = message.Event.GetType(); 
+
+        var method =
+            typeof(OutboxService).GetMethod(nameof(PublishEvent), BindingFlags.NonPublic | BindingFlags.Instance);
+
+        if (method is null)
+        {
+            throw new Exception("Unable to publish message");
+        }
+
+        var genericMethod = method.MakeGenericMethod(type);
+
+        await (Task)genericMethod.Invoke(this, new[] { message.Event, cancellationToken })!;
+    }
+
+    private async Task PublishEvent<TEvent>(TEvent @event, CancellationToken cancellationToken)
+        where TEvent : class, IEvent
+    {
+        await publisher.PublishAsync(@event, cancellationToken);
     }
 }
