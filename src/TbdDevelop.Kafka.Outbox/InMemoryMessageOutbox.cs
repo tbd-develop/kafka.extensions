@@ -26,6 +26,7 @@ public class InMemoryMessageOutbox : IMessageOutbox
                 var storedMessage = GetMessageForKey(message.Identifier);
                 //Console.WriteLine($"Operation with key '{message.Identifier}' and message '{storedMessage}' is already processed. Skipping.");
                 _logger.LogInformation($"Operation with key '{message.Identifier}' and message '{storedMessage}' is already processed. Skipping.");
+                return;
             }
 
             _outbox.TryAdd(message.Identifier, message);
