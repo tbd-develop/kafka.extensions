@@ -23,9 +23,7 @@ public class InMemoryMessageOutbox : IMessageOutbox
 
             if (IsIdempotent(message.Identifier))
             {
-                var storedMessage = GetMessageForKey(message.Identifier);
-                //Console.WriteLine($"Operation with key '{message.Identifier}' and message '{storedMessage}' is already processed. Skipping.");
-                _logger.LogInformation($"Operation with key '{message.Identifier}' and message '{storedMessage}' is already processed. Skipping.");
+                _logger.LogInformation($"Operation with key '{message.Identifier}' is already processed. Skipping.");
                 return;
             }
 
@@ -36,12 +34,6 @@ public class InMemoryMessageOutbox : IMessageOutbox
     private bool IsIdempotent(Guid key)
     {
         return _outbox.ContainsKey(key);
-    }
-
-    private IOutboxMessage GetMessageForKey(Guid key)
-    {
-        _outbox.TryGetValue(key, out var storedMessage);
-        return storedMessage; // possible null reference return
     }
 
     public Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
