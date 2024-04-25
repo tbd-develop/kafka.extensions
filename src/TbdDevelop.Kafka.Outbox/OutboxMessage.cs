@@ -1,13 +1,7 @@
 using TbdDevelop.Kafka.Abstractions;
+using TbdDevelop.Kafka.Outbox.Contracts;
 
 namespace TbdDevelop.Kafka.Outbox;
-
-public interface IOutboxMessage
-{
-    Guid Identifier { get; }
-    DateTime AddedOn { get; }
-    public object Event { get; }
-}
 
 public class OutboxMessage<TEvent>(TEvent @event) : IOutboxMessage
     where TEvent : IEvent

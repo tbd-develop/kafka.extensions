@@ -2,18 +2,11 @@
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
 
-public class DispatchingKafkaConsumer : IEventConsumer
+public class DispatchingKafkaConsumer(IEnumerable<TopicConsumer> consumers) : IEventConsumer
 {
-    private readonly IEnumerable<TopicConsumer> _consumers;
-
-    public DispatchingKafkaConsumer(IEnumerable<TopicConsumer> consumers)
-    {
-        _consumers = consumers;
-    }
-
     public async Task BeginConsumeAsync(CancellationToken cancellationToken = default)
     {
-        var tasks = _consumers
+        var tasks = consumers
             .Select(consumer =>
                 Task
                     .Factory

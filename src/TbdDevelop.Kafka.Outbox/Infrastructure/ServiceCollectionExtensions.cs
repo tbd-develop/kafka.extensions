@@ -8,13 +8,13 @@ namespace TbdDevelop.Kafka.Outbox.Infrastructure;
 
 public static class ServiceCollectionExtensions
 {
-    public static KafkaInstanceBuilder AddOutbox(this KafkaInstanceBuilder builder,
+    public static KafkaInstanceBuilder AddOutboxPublisher(this KafkaInstanceBuilder builder,
         Action<OutboxConfigurationBuilder> configure)
     {
         builder.Register(services =>
         {
             services.GuardAlreadyRegistered<IEventPublisher>(
-                "Cannot add outbox when a publisher is already registered");
+                "Cannot add outbox publisher when a publisher is already registered");
 
             var outboxBuilder = new OutboxConfigurationBuilder(services);
 

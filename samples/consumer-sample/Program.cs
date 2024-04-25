@@ -12,15 +12,9 @@ var host = Host.CreateDefaultBuilder()
     {
         services.AddSingleton<SampleEventReceiver>();
 
-        services.AddKafka(builder =>
-        {
-            builder.AddDispatchingConsumer(configure =>
-            {
-                configure.AddEventReceiver<SampleEvent, SampleEventReceiver>();
-            });
-
-            builder.AddBasicWorkerService();
-        });
+        services.AddKafka()
+            .AddDispatchingConsumer(configure => { configure.AddEventReceiver<SampleEvent, SampleEventReceiver>(); })
+            .AddBasicWorkerService();
     })
     .Build();
 

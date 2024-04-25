@@ -8,16 +8,13 @@ using TbdDevelop.Kafka.Outbox.Infrastructure;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices(services =>
     {
-        services.AddKafka(builder =>
-        {
-            builder
-                .AddOutbox(configure =>
-                {
-                    configure
-                        .UseInMemoryOutbox()
-                        .WithDefaultPublisher();
-                });
-        });
+        services.AddKafka()
+            .AddOutboxPublisher(configure =>
+            {
+                configure
+                    .UseInMemoryOutbox()
+                    .WithDefaultPublisher();
+            });
     })
     .Build();
 

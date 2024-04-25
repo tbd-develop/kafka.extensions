@@ -7,10 +7,9 @@ using TbdDevelop.Kafka.Extensions.Infrastructure;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices(services =>
     {
-        services.AddKafka(builder =>
-        {
-            builder.AddDefaultPublisher();
-        });
+        services
+            .AddKafka()
+            .AddDefaultPublisher();
     })
     .Build();
 
