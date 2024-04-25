@@ -54,9 +54,8 @@ If you want to configure your application to Publish events, then you need to ad
 services configuration for Dependency Injection, you need
 
 ```csharp
-services.AddKafka(builder => {
-    builder.AddDefaultPublisher();    
-    });
+services.AddKafka()
+    .AddDefaultPublisher();
 ```
 
 This will set up the configuration, and load a IEventPublisher. To use the publisher, use as such;
@@ -87,12 +86,11 @@ If you want to configure your application to consume events, then you need to ad
 you need to register a receiver. In your services configuration for Dependency Injection, you need
 
 ```csharp
-services.AddKafka(builder => {
-    builder.AddDispatchingConsumer( configure => {
+services.AddKafka()
+    .AddDispatchingConsumer( configure => {
             configure.AddEventReceiver<ExampleEvent, ExampleEventReceiver>();
             configure.AddEventReceiver<AnotherEvent, AnotherEventReceiver>();
-    });    
-});
+    });
 ```
 Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons 
 as each receiver will be attached to a single running consumer process. 
@@ -107,13 +105,12 @@ But, once configured, when the consumers are started, and an event is received t
 There is a default worker service available in the services library. With it included, you can add this using
 
 ```csharp
-services.AddKafka(builder => {
-    builder.AddDispatchingConsumer( configure => {
+services.AddKafka()
+    .AddDispatchingConsumer( configure => {
             configure.AddEventReceiver<ExampleEvent, ExampleEventHandler>();
             configure.AddEventReceiver<AnotherEvent, AnotherEventHandler>();
-    });    
-    builder.AddBasicWorkerService();
-});
+    })
+    .AddBasicWorkerService();
 ```
 
 This will add a hosted service and then start consuming when the service starts.
@@ -125,16 +122,13 @@ The outbox is a pattern for ensuring that messages are published to Kafka, and t
 To configure using Outbox instead of using the DefaultPublisher, you need to add the following to your configuration;
 
 ```csharp
- services.AddKafka(builder =>
-        {
-            builder
-                .AddOutbox(configure =>
+ services.AddKafka()
+     .AddOutbox(configure =>
                 {
                     configure
                         .UseInMemoryOutbox()
                         .WithDefaultPublisher();
                 });
-        });
 ```
 
 Right now, the only outbox implementation is in memory. We still use the default publisher, but this is handled by the outbox now.
