@@ -13,7 +13,7 @@ public class InMemoryMessageOutbox : IMessageOutbox
     {
         await Task.Run(() =>
         {
-            var message = new OutboxMessage<TEvent>(@event);
+            var message = new OutboxMessage<TEvent>(Guid.NewGuid(), DateTime.UtcNow, @event);
 
             _outbox.TryAdd(message.Identifier, message);
         }, cancellationToken);

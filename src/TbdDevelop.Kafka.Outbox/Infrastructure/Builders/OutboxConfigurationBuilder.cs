@@ -22,4 +22,11 @@ public class OutboxConfigurationBuilder(IServiceCollection services)
 
         return this;
     }
+
+    public OutboxConfigurationBuilder Register(Action<IServiceCollection> configure)
+    {
+        configure(services);
+
+        return this;
+    }
 }
