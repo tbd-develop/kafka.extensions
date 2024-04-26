@@ -1,14 +1,14 @@
-## Kakfa Extensions 
+## Kakfa Extensions
 
 [![Release to Nuget](https://github.com/tbd-develop/kafka.extensions/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/tbd-develop/kafka.extensions/actions/workflows/release.yml)
 
-This library contains a set of tools I use often to work with Apache Kafka. More specifically, 
-it's build off of the Confluent Kafka library. 
+This library contains a set of tools I use often to work with Apache Kafka. More specifically,
+it's build off of the Confluent Kafka library.
 
 ### Why?
 
-I always want to clean up using Kafka, and I want to avoid using the consumers / producer components 
-in all my code. So, I often end up writing pieces to wrap around them that look like this. This is just 
+I always want to clean up using Kafka, and I want to avoid using the consumers / producer components
+in all my code. So, I often end up writing pieces to wrap around them that look like this. This is just
 a result of several attempts to make something smoother.
 
 ### How do I use it?
@@ -40,17 +40,19 @@ First you're going to need the configuration set up. Add a node to your appsetti
 }
 ```
 
-Obviously, if you're publishing, then you need Producer. Consuming, you need consumer. In either case you need the topics 
-configured that you're going to use. 
+Obviously, if you're publishing, then you need Producer. Consuming, you need consumer. In either case you need the
+topics
+configured that you're going to use.
 
 Here, the events that we're publishing / consuming live in a shared events library that you're application knows about.
 
-The configuration under consumer and producer are standard Kafka configuration value options. If you can pass them to a Kafka 
+The configuration under consumer and producer are standard Kafka configuration value options. If you can pass them to a
+Kafka
 producer on consumer, you can put them in here.
 
 #### Publishing (Producers)
 
-If you want to configure your application to Publish events, then you need to add the production components. So, in your 
+If you want to configure your application to Publish events, then you need to add the production components. So, in your
 services configuration for Dependency Injection, you need
 
 ```csharp
@@ -77,12 +79,13 @@ public class MyService
 }
 ```    
 
-Where ExampleEvent is a class that implements IEvent. DefaultEvent is an abstract implementation 
-of IEvent to use as a base class.  
+Where ExampleEvent is a class that implements IEvent. DefaultEvent is an abstract implementation
+of IEvent to use as a base class.
 
 #### Consuming (Consumers)
 
-If you want to configure your application to consume events, then you need to add the consumer components. For each event you wish to receive, 
+If you want to configure your application to consume events, then you need to add the consumer components. For each
+event you wish to receive,
 you need to register a receiver. In your services configuration for Dependency Injection, you need
 
 ```csharp
@@ -92,15 +95,17 @@ services.AddKafka()
             configure.AddEventReceiver<AnotherEvent, AnotherEventReceiver>();
     });
 ```
-Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons 
-as each receiver will be attached to a single running consumer process. 
+
+Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons
+as each receiver will be attached to a single running consumer process.
 
 ```csharp
 services.AddSingleton<ExampleEventReceiver>();
 services.AddSingleton<AnotherEventReceiver>();
 ```
 
-But, once configured, when the consumers are started, and an event is received then they'll be dispatched to the handlers.
+But, once configured, when the consumers are started, and an event is received then they'll be dispatched to the
+handlers.
 
 There is a default worker service available in the services library. With it included, you can add this using
 
@@ -121,6 +126,8 @@ The outbox is a pattern for ensuring that messages are published to Kafka, and t
 
 To configure using Outbox instead of using the DefaultPublisher, you need to add the following to your configuration;
 
+#### In Memory Outbox
+
 ```csharp
  services.AddKafka()
      .AddOutbox(configure =>
@@ -131,6 +138,18 @@ To configure using Outbox instead of using the DefaultPublisher, you need to add
                 });
 ```
 
-Right now, the only outbox implementation is in memory. We still use the default publisher, but this is handled by the outbox now.
+#### SQL Outbox
+
+To use a persisted outbox, you can include the Outbox.SqlServer package and then configure as such;
+
+```csharp
+    services.AddKafka()
+        .AddOutbox(configure =>
+                    {
+                        configure
+                            .UseSqlServerOutbox("connection-string")
+                            .WithDefaultPublisher();
+                    });
+    ```
 
 If you try and use the default publisher and the outbox, you will get an exception at run time.
