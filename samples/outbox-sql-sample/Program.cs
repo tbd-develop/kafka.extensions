@@ -10,6 +10,7 @@ using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Outbox.Infrastructure;
 using TbdDevelop.Kafka.Outbox.SqlServer.Context;
 using TbdDevelop.Kafka.Outbox.SqlServer.Extensions;
+using TbdDevelop.Kafka.Outbox.SqlServer.Infrastructure;
 using Testcontainers.MsSql;
 
 var msSqlContainer = new MsSqlBuilder()
@@ -25,7 +26,7 @@ var builder = new HostBuilder()
             .AddOutboxPublisher(configure =>
             {
                 configure
-                    .UseSqlServerOutbox(msSqlContainer.GetConnectionString())
+                    .UseSqlServerOutbox(new OutboxConfigurationOptions(msSqlContainer.GetConnectionString()))
                     .WithDefaultPublisher();
             });
     });
