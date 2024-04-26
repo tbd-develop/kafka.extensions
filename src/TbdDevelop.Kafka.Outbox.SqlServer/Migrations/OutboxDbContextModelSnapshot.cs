@@ -35,12 +35,14 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateAdded")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getutcdate()");
 
                     b.Property<DateTime?>("DateProcessed")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("Identifier")
+                    b.Property<Guid>("Key")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Type")
@@ -49,7 +51,7 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OutboxMessages");
+                    b.ToTable("KafkaMessagingOutbox", (string)null);
                 });
 #pragma warning restore 612, 618
         }
