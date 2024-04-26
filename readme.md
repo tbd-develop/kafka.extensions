@@ -130,11 +130,10 @@ To configure using Outbox instead of using the DefaultPublisher, you need to add
 
 ```csharp
  services.AddKafka()
-     .AddOutbox(configure =>
+     .AddOutboxPublisher(configure =>
                 {
                     configure
-                        .UseInMemoryOutbox()
-                        .WithDefaultPublisher();
+                        .UseInMemoryOutbox();
                 });
 ```
 
@@ -144,11 +143,10 @@ To use a persisted outbox, you can include the Outbox.SqlServer package and then
 
 ```csharp
     services.AddKafka()
-        .AddOutbox(configure =>
+        .AddOutboxPublisher(configure =>
                     {
                         configure
-                            .UseSqlServerOutbox("connection-string")
-                            .WithDefaultPublisher();
+                            .UseSqlServerOutbox("connection-string");
                     });
     ```
 
