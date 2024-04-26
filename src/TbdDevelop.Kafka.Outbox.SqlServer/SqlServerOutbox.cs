@@ -14,14 +14,14 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public async Task PostAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
         await context.OutboxMessages.AddAsync(new OutboxMessageContent
         {
-            Identifier = Guid.NewGuid(),
+            Key = key,
             Type = @event.GetType().AssemblyQualifiedName!,
             Content = JsonSerializer.Serialize(@event, SerializerOptions),
             DateAdded = DateTime.UtcNow
@@ -55,7 +55,7 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
 
         return (IOutboxMessage)Activator.CreateInstance(
             typeof(OutboxMessage<>).MakeGenericType(type),
-            message.Identifier, message.DateAdded, @event)!;
+            message.Key, message.DateAdded, @event)!;
     }
 
     public async Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
@@ -63,7 +63,7 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
         var current =
-            await context.OutboxMessages.SingleOrDefaultAsync(m => m.Identifier == message.Identifier,
+            await context.OutboxMessages.SingleOrDefaultAsync(m => m.Key == message.Key,
                 cancellationToken);
 
         if (current is null)

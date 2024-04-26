@@ -15,6 +15,6 @@ var host = Host.CreateDefaultBuilder()
 
 var publisher = host.Services.GetRequiredService<IEventPublisher>();
 
-await publisher.PublishAsync(new SampleEvent { SomeValue = "Hello World", SomeOtherValue = 42 });
+await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello World", SomeOtherValue = 42 });
 
 //await host.RunAsync();

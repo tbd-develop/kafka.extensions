@@ -13,21 +13,6 @@ public class OutboxMessageContentTypeConfiguration
 
         builder.HasKey(k => k.Id);
 
-        builder.Property(p => p.Identifier)
-            .HasConversion<Guid>();
-
-        builder.Property(p => p.Type)
-            .HasConversion<string>();
-
-        builder.Property(p => p.Content)
-            .HasConversion<string>();
-
-        builder.Property(p => p.DateAdded)
-            .HasConversion<DateTime>();
-
-        builder.Property(p => p.DateProcessed)
-            .HasConversion<DateTime?>();
-
         builder.Property(p => p.DateAdded)
             .HasDefaultValueSql("getutcdate()");
     }

@@ -12,7 +12,7 @@ using TbdDevelop.Kafka.Outbox.SqlServer.Context;
 namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
 {
     [DbContext(typeof(OutboxDbContext))]
-    [Migration("20240426011834_Initial")]
+    [Migration("20240426130436_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -38,12 +38,14 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateAdded")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getutcdate()");
 
                     b.Property<DateTime?>("DateProcessed")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("Identifier")
+                    b.Property<Guid>("Key")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Type")
@@ -52,7 +54,7 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OutboxMessages");
+                    b.ToTable("KafkaMessagingOutbox", (string)null);
                 });
 #pragma warning restore 612, 618
         }

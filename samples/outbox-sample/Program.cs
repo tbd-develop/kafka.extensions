@@ -12,14 +12,13 @@ var host = Host.CreateDefaultBuilder()
             .AddOutboxPublisher(configure =>
             {
                 configure
-                    .UseInMemoryOutbox()
-                    .WithDefaultPublisher();
+                    .UseInMemoryOutbox();
             });
     })
     .Build();
 
 var publisher = host.Services.GetRequiredService<IEventPublisher>();
 
-await publisher.PublishAsync(new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 101 });
+await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 101 });
 
 await host.RunAsync();

@@ -4,7 +4,7 @@ namespace TbdDevelop.Kafka.Outbox.Contracts;
 
 public interface IMessageOutbox
 {
-    Task PostAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+    Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent;
 
     Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default);

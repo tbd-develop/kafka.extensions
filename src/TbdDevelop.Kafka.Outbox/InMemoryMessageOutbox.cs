@@ -8,14 +8,14 @@ public class InMemoryMessageOutbox : IMessageOutbox
 {
     private readonly ConcurrentDictionary<Guid, IOutboxMessage> _outbox = new();
 
-    public async Task PostAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
         await Task.Run(() =>
         {
-            var message = new OutboxMessage<TEvent>(Guid.NewGuid(), DateTime.UtcNow, @event);
+            var message = new InMemoryOutboxMessage<TEvent>(Guid.NewGuid(), key, DateTime.UtcNow, @event);
 
-            _outbox.TryAdd(message.Identifier, message);
+            _outbox.TryAdd(message.Id, message);
         }, cancellationToken);
     }
 
@@ -33,6 +33,24 @@ public class InMemoryMessageOutbox : IMessageOutbox
 
     public Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
     {
-        return Task.Run(() => { _outbox.TryRemove(message.Identifier, out _); }, cancellationToken);
+        return Task.Run(() =>
+        {
+            if (message is not IInMemoryOutboxMessage inMemoryMessage)
+                return;
+
+            _outbox.TryRemove(inMemoryMessage.Id, out _);
+        }, cancellationToken);
+    }
+
+    private class InMemoryOutboxMessage<TEvent>(Guid id, Guid key, DateTime dateAdded, TEvent @event)
+        : OutboxMessage<TEvent>(key, dateAdded, @event), IInMemoryOutboxMessage
+        where TEvent : IEvent
+    {
+        public Guid Id { get; } = id;
+    }
+
+    private interface IInMemoryOutboxMessage : IOutboxMessage
+    {
+        Guid Id { get; }
     }
 }

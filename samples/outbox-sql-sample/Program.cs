@@ -1,10 +1,10 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
+using events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using outbox_sql_sample;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Outbox.Infrastructure;
@@ -19,25 +19,24 @@ var msSqlContainer = new MsSqlBuilder()
 
 await msSqlContainer.StartAsync();
 
-var builder = new HostBuilder()
-    .ConfigureServices((hostContext, services) =>
+var builder = Host.CreateDefaultBuilder()
+    .ConfigureServices((_, services) =>
     {
         services.AddKafka()
             .AddOutboxPublisher(configure =>
             {
                 configure
-                    .UseSqlServerOutbox(new OutboxConfigurationOptions(msSqlContainer.GetConnectionString()))
-                    .WithDefaultPublisher();
+                    .UseSqlServerOutbox(new OutboxConfigurationOptions(msSqlContainer.GetConnectionString()));
             });
     });
 
 var app = builder.Build();
 
-app.ConfigureSqlOutbox();
+app.ConfigureKafkaSqlOutbox();
 
 var publisher = app.Services.GetRequiredService<IEventPublisher>();
 
-await publisher.PublishAsync(new SampleEvent { Name = "Hello, World" });
+await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 99 });
 
 var factory = app.Services.GetRequiredService<IDbContextFactory<OutboxDbContext>>();
 

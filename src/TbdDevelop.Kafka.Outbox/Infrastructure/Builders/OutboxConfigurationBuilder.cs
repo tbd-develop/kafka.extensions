@@ -14,15 +14,7 @@ public class OutboxConfigurationBuilder(IServiceCollection services)
 
         return this;
     }
-
-    public OutboxConfigurationBuilder WithDefaultPublisher()
-    {
-        services.AddTransient<IEventPublisher, OutboxPublisher>();
-        services.AddTransient<KafkaPublisher>();
-
-        return this;
-    }
-
+    
     public OutboxConfigurationBuilder Register(Action<IServiceCollection> configure)
     {
         configure(services);

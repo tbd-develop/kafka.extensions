@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System.Data;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
@@ -17,7 +18,7 @@ public class KafkaPublisher : IEventPublisher
         _configuration = configuration;
     }
 
-    public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
         if (!_configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
@@ -35,7 +36,7 @@ public class KafkaPublisher : IEventPublisher
         await producer.ProduceAsync(topic,
             new Message<Guid, TEvent>()
             {
-                Key = @event.EventId,
+                Key = key,
                 Timestamp = new Timestamp(@event.OccurredOn),
                 Value = @event
             }, cancellationToken);

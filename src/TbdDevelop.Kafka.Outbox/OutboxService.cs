@@ -55,7 +55,7 @@ public class OutboxService(
 
     private async Task PublishMessage(IOutboxMessage message, CancellationToken cancellationToken)
     {
-        var type = message.Event.GetType(); 
+        var type = message.Event.GetType();
 
         var method =
             typeof(OutboxService).GetMethod(nameof(PublishEvent), BindingFlags.NonPublic | BindingFlags.Instance);
@@ -67,12 +67,12 @@ public class OutboxService(
 
         var genericMethod = method.MakeGenericMethod(type);
 
-        await (Task)genericMethod.Invoke(this, new[] { message.Event, cancellationToken })!;
+        await (Task)genericMethod.Invoke(this, [message.Key, message.Event, cancellationToken])!;
     }
 
-    private async Task PublishEvent<TEvent>(TEvent @event, CancellationToken cancellationToken)
+    private async Task PublishEvent<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken)
         where TEvent : class, IEvent
     {
-        await publisher.PublishAsync(@event, cancellationToken);
+        await publisher.PublishAsync(key, @event, cancellationToken);
     }
 }

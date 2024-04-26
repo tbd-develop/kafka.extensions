@@ -2,6 +2,7 @@
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
+using TbdDevelop.Kafka.Extensions.Publishing;
 using TbdDevelop.Kafka.Outbox.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Outbox.Infrastructure;
@@ -21,6 +22,9 @@ public static class ServiceCollectionExtensions
             configure(outboxBuilder);
 
             services.AddHostedService<OutboxService>();
+            
+            services.AddTransient<IEventPublisher, OutboxPublisher>();
+            services.AddTransient<KafkaPublisher>();
         });
 
         return builder;
