@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using TbdDevelop.Kafka.Outbox.SqlServer.Infrastructure;
 
 #nullable disable
 
@@ -12,7 +13,7 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "OutboxMessages",
+                name: "KafkaMessagingOutbox",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -33,7 +34,7 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "OutboxMessages");
+                name: "KafkaMessagingOutbox");
         }
     }
 }

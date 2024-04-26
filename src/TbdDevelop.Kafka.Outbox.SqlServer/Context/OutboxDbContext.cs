@@ -5,7 +5,7 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Context;
 
 public class OutboxDbContext(DbContextOptions<OutboxDbContext> options) : DbContext(options)
 {
-    public DbSet<OutboxMessageContent> OutboxMessages { get; set; } = null!;
+    public DbSet<OutboxMessageContent> OutboxMessages => Set<OutboxMessageContent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
