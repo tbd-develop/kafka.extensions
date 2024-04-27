@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Abstractions;
+using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Publishing;
 using TbdDevelop.Kafka.Outbox.Contracts;
 
@@ -10,15 +12,14 @@ namespace TbdDevelop.Kafka.Outbox;
 public class OutboxService(
     IMessageOutbox outbox,
     KafkaPublisher publisher,
-    ILogger<OutboxService> logger) : BackgroundService
+    ILogger<OutboxService> logger,
+    IOptions<OutboxPublishingConfiguration> options) : BackgroundService
 {
-    private const int DefaultDelayTimeMs = 25;
-    private const int BackoffIntervalMs = 1000;
-    private const int MaxBackOffIntervalMs = 10000;
-
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var delayTimeMs = DefaultDelayTimeMs;
+        var configuration = options.Value;
+
+        var delayTime = configuration.Interval;
 
         return Task.Factory.StartNew(async () =>
         {
@@ -35,20 +36,20 @@ public class OutboxService(
 
                     await outbox.Commit(message, stoppingToken);
 
-                    delayTimeMs = DefaultDelayTimeMs;
+                    delayTime = configuration.Interval;
                 }
                 catch (Exception exception)
                 {
-                    if (delayTimeMs < MaxBackOffIntervalMs)
+                    if (delayTime < configuration.MaximumBackOff)
                     {
-                        delayTimeMs += BackoffIntervalMs;
+                        delayTime += configuration.BackOffOnException;
                     }
 
                     logger.LogError(exception, "Error while publishing message. Backing off for {BackoffIntervalMs}ms",
-                        BackoffIntervalMs);
+                        delayTime);
                 }
 
-                await Task.Delay(delayTimeMs, stoppingToken);
+                await Task.Delay(delayTime, stoppingToken);
             } while (!stoppingToken.IsCancellationRequested);
         }, TaskCreationOptions.LongRunning | TaskCreationOptions.AttachedToParent);
     }

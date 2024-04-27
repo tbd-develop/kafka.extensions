@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using TbdDevelop.Kafka.Abstractions;
+using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 using TbdDevelop.Kafka.Extensions.Publishing;
@@ -21,10 +22,31 @@ public static class ServiceCollectionExtensions
 
             configure(outboxBuilder);
 
-            services.AddHostedService<OutboxService>();
-            
             services.AddTransient<IEventPublisher, OutboxPublisher>();
             services.AddTransient<KafkaPublisher>();
+        });
+
+        return builder;
+    }
+
+    public static KafkaInstanceBuilder AddOutboxPublishingService(
+        this KafkaInstanceBuilder builder,
+        Action<OutboxPublishingConfigurationBuilder>? configure = null)
+    {
+        builder.Register(services =>
+        {
+            services.AddHostedService<OutboxService>();
+
+            if (configure is null)
+            {
+                services.Configure<OutboxPublishingConfiguration>(_ => { });
+
+                return;
+            }
+
+            var builder = new OutboxPublishingConfigurationBuilder(services);
+
+            configure(builder);
         });
 
         return builder;
