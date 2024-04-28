@@ -27,6 +27,10 @@ var builder = Host.CreateDefaultBuilder()
             {
                 configure
                     .UseSqlServerOutbox(new OutboxConfigurationOptions(msSqlContainer.GetConnectionString()));
+            })
+            .AddOutboxPublishingService(configure =>
+            {
+                configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(15); });
             });
     });
 
