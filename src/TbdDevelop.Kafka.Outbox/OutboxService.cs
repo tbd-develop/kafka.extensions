@@ -29,12 +29,14 @@ public class OutboxService(
                 {
                     var message = await outbox.RetrieveNextMessage(stoppingToken);
 
-                    if (message is null)
+                    if (message is not null)
+                    {
+                        await PublishMessage(message, stoppingToken);
+
+                        await outbox.Commit(message, stoppingToken);
+
                         continue;
-
-                    await PublishMessage(message, stoppingToken);
-
-                    await outbox.Commit(message, stoppingToken);
+                    }
 
                     delayTime = configuration.Interval;
                 }
