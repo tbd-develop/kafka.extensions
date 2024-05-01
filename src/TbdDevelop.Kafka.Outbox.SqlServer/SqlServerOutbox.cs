@@ -54,17 +54,22 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         var @event = JsonSerializer.Deserialize(message.Content, type, SerializerOptions);
 
         return (IOutboxMessage)Activator.CreateInstance(
-            typeof(OutboxMessage<>).MakeGenericType(type),
-            message.Key, message.DateAdded, @event)!;
+            typeof(SqlOutboxMessage<>).MakeGenericType(type),
+            message.Id, message.Key, message.DateAdded, @event)!;
     }
 
     public async Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
+        if (message is not ISqlOutboxMessage sqlMessage)
+        {
+            return;
+        }
+
         var current =
-            await context.OutboxMessages.SingleOrDefaultAsync(m => m.Key == message.Key,
-                cancellationToken);
+            await context.OutboxMessages.FirstOrDefaultAsync(m =>
+                m.Id == sqlMessage.Id, cancellationToken);
 
         if (current is null)
         {
@@ -74,5 +79,17 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         current.DateProcessed = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private sealed class SqlOutboxMessage<TEvent>(int id, Guid key, DateTime dateAdded, TEvent @event)
+        : OutboxMessage<TEvent>(key, dateAdded, @event), ISqlOutboxMessage
+        where TEvent : IEvent
+    {
+        public int Id { get; } = id;
+    }
+
+    private interface ISqlOutboxMessage : IOutboxMessage
+    {
+        int Id { get; }
     }
 }

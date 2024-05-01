@@ -40,7 +40,10 @@ app.ConfigureKafkaSqlOutbox();
 
 var publisher = app.Services.GetRequiredService<IEventPublisher>();
 
-await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 99 });
+var key = Guid.NewGuid();
+
+await publisher.PublishAsync(key, new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 99 });
+await publisher.PublishAsync(key, new SampleEvent { SomeValue = "Hello, Another World", SomeOtherValue = 10001 });
 
 var factory = app.Services.GetRequiredService<IDbContextFactory<OutboxDbContext>>();
 
