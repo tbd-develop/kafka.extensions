@@ -5,6 +5,12 @@ namespace TbdDevelop.Kafka.Outbox;
 
 public class OutboxPublisher(IMessageOutbox outbox) : IEventPublisher
 {
+    public Task PublishAsync<TEvent>(Guid key, TEvent @event, string topic,
+        CancellationToken cancellationToken = default) where TEvent : class, IEvent
+    {
+        return outbox.PostAsync(key, @event, topic, cancellationToken);
+    }
+
     public Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {

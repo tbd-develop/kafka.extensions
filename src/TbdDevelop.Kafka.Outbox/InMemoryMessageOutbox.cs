@@ -19,6 +19,18 @@ public class InMemoryMessageOutbox : IMessageOutbox
         }, cancellationToken);
     }
 
+    public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
+        CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await Task.Run(() =>
+        {
+            var message = new InMemoryOutboxMessage<TEvent>(Guid.NewGuid(), key, DateTime.UtcNow, @event, topic);
+
+            _outbox.TryAdd(message.Id, message);
+        }, cancellationToken);
+    }
+
     public Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
@@ -42,8 +54,13 @@ public class InMemoryMessageOutbox : IMessageOutbox
         }, cancellationToken);
     }
 
-    private class InMemoryOutboxMessage<TEvent>(Guid id, Guid key, DateTime dateAdded, TEvent @event)
-        : OutboxMessage<TEvent>(key, dateAdded, @event), IInMemoryOutboxMessage
+    private class InMemoryOutboxMessage<TEvent>(
+        Guid id,
+        Guid key,
+        DateTime dateAdded,
+        TEvent @event,
+        string? topic = null)
+        : OutboxMessage<TEvent>(key, dateAdded, @event, topic), IInMemoryOutboxMessage
         where TEvent : IEvent
     {
         public Guid Id { get; } = id;

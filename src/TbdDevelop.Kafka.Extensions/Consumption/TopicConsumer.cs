@@ -7,41 +7,30 @@ using TbdDevelop.Kafka.Extensions.Deserializers;
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
 
-public abstract class TopicConsumer
-{
-    public abstract Task Consume(CancellationToken cancellationToken);
-}
-
-public class TopicConsumer<TEvent> : TopicConsumer
+public class TopicConsumer<TEvent>(
+    string topicToSubscribe,
+    IDictionary<string, string> topicConfiguration,
+    IEventReceiver<TEvent> eventReceiver,
+    ILogger<TopicConsumer<TEvent>> logger)
+    : ITopicConsumer
     where TEvent : class, IEvent
 {
-    private readonly string _topicToSubscribe;
-    private readonly IDictionary<string, string> _topicConfiguration;
-    private readonly IEventReceiver<TEvent> _eventReceiver;
-    private readonly ILogger<TopicConsumer<TEvent>> _logger;
-
-    public TopicConsumer(
-        string topicToSubscribe,
-        IDictionary<string, string> topicConfiguration,
-        IEventReceiver<TEvent> eventReceiver,
-        ILogger<TopicConsumer<TEvent>> logger)
+    private static JsonSerializerOptions DefaultJsonSerializerOptions => new()
     {
-        _topicToSubscribe = topicToSubscribe;
-        _topicConfiguration = topicConfiguration;
-        _eventReceiver = eventReceiver;
-        _logger = logger;
-    }
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
-    public override async Task Consume(CancellationToken cancellationToken)
+    public async Task Consume(CancellationToken cancellationToken)
     {
-        using var consumer = new ConsumerBuilder<Guid, string>(_topicConfiguration)
+        using var consumer = new ConsumerBuilder<Guid, string>(topicConfiguration)
             .SetKeyDeserializer(new GuidKeyDeserializer())
             .SetValueDeserializer(new StringDeserializer())
-            .SetErrorHandler((_, error) => _logger.LogError(error.Reason))
-            .SetLogHandler((_, logMessage) => _logger.LogInformation(logMessage.Message))
+            .SetErrorHandler((_, error) => logger.LogError(error.Reason))
+            .SetLogHandler((_, logMessage) => logger.LogInformation(logMessage.Message))
             .Build();
 
-        consumer.Subscribe(_topicToSubscribe);
+        consumer.Subscribe(topicToSubscribe);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -49,23 +38,18 @@ public class TopicConsumer<TEvent> : TopicConsumer
 
             if (result.Message is null) continue;
 
-            var @event = JsonSerializer.Deserialize<TEvent>(result.Message.Value,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
+            var @event = JsonSerializer.Deserialize<TEvent>(result.Message.Value, DefaultJsonSerializerOptions);
 
             if (@event is null)
             {
-                _logger.LogError("{topicToSubscribe} / {message} message could not be deserialized",
-                    _topicToSubscribe,
+                logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
+                    topicToSubscribe,
                     result.Message.Value);
 
                 continue;
             }
 
-            await _eventReceiver.ReceiveAsync(@event, cancellationToken);
+            await eventReceiver.ReceiveAsync(@event, cancellationToken);
 
             consumer.Commit(result);
         }
