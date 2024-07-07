@@ -30,6 +30,23 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
+        CancellationToken cancellationToken = default) where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = @event.GetType().AssemblyQualifiedName!,
+            Content = JsonSerializer.Serialize(@event, SerializerOptions),
+            Topic = topic,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
@@ -55,7 +72,7 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
 
         return (IOutboxMessage)Activator.CreateInstance(
             typeof(SqlOutboxMessage<>).MakeGenericType(type),
-            message.Id, message.Key, message.DateAdded, @event)!;
+            message.Id, message.Key, message.DateAdded, @event, message.Topic)!;
     }
 
     public async Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
@@ -81,8 +98,13 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private sealed class SqlOutboxMessage<TEvent>(int id, Guid key, DateTime dateAdded, TEvent @event)
-        : OutboxMessage<TEvent>(key, dateAdded, @event), ISqlOutboxMessage
+    private sealed class SqlOutboxMessage<TEvent>(
+        int id,
+        Guid key,
+        DateTime dateAdded,
+        TEvent @event,
+        string? topic = null)
+        : OutboxMessage<TEvent>(key, dateAdded, @event, topic), ISqlOutboxMessage
         where TEvent : IEvent
     {
         public int Id { get; } = id;

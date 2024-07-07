@@ -17,4 +17,7 @@ var publisher = host.Services.GetRequiredService<IEventPublisher>();
 
 await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello World", SomeOtherValue = 42 });
 
-//await host.RunAsync();
+await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello Another World", SomeOtherValue = 99 },
+    "configured.topic");
+
+await host.RunAsync();
