@@ -12,7 +12,7 @@ public class DispatchingConsumerConfigurationBuilder(
     ILoggerFactory loggerFactory,
     KafkaConfiguration configuration)
 {
-    private readonly List<TopicConsumer> _consumers = [];
+    private readonly List<ITopicConsumer> _consumers = [];
 
     public DispatchingConsumerConfigurationBuilder AddEventReceiver<TEvent, TConsumer>()
         where TEvent : class, IEvent

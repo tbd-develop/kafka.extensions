@@ -2,7 +2,7 @@
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
 
-public class DispatchingKafkaConsumer(IEnumerable<TopicConsumer> consumers) : IEventConsumer
+public class DispatchingKafkaConsumer(IEnumerable<ITopicConsumer> consumers) : IEventConsumer
 {
     public async Task BeginConsumeAsync(CancellationToken cancellationToken = default)
     {
