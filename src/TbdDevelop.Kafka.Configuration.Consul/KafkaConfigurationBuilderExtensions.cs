@@ -34,8 +34,6 @@ public static partial class KafkaConfigurationBuilderExtensions
                     .Topics;
 
                 return config;
-
-                return new KafkaConfiguration();
             });
         });
 
