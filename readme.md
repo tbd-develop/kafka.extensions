@@ -91,8 +91,32 @@ you need to register a receiver. In your services configuration for Dependency I
 ```csharp
 services.AddKafka()
     .AddDispatchingConsumer( configure => {
-            configure.AddEventReceiver<ExampleEvent, ExampleEventReceiver>();
-            configure.AddEventReceiver<AnotherEvent, AnotherEventReceiver>();
+            configure.AddEventReceiver<ExampleEventReceiver>();
+            configure.AddEventReceiver<AnotherEventReceiver>();
+    });
+```
+
+A receiver should be defined as follows;
+
+```csharp
+public class ExampleEventReceiver : EventReceiver<ExampleEvent>
+{
+    public override Task ReceiveAsync(ExampleEvent @event, CancellationToken cancellationToken)
+    {
+        // Do something with the event
+        return Task.CompletedTask;
+    }
+}
+
+```
+
+By default, the receiver will be listening to events occuring on the mapped topic based on the event type. However, 
+if you have a different configuration for a topic, you can specify the topic name in the arguments;
+
+```csharp
+services.AddKafka()
+    .AddDispatchingConsumer( configure => {
+            configure.AddEventReceiver<ExampleEventReceiver>("my-product.event");
     });
 ```
 
@@ -112,8 +136,8 @@ There is a default worker service available in the services library. With it inc
 ```csharp
 services.AddKafka()
     .AddDispatchingConsumer( configure => {
-            configure.AddEventReceiver<ExampleEvent, ExampleEventHandler>();
-            configure.AddEventReceiver<AnotherEvent, AnotherEventHandler>();
+            configure.AddEventReceiver<ExampleEventHandler>();
+            configure.AddEventReceiver<AnotherEventHandler>();
     })
     .AddBasicWorkerService();
 ```
