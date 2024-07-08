@@ -3,9 +3,9 @@ using TbdDevelop.Kafka.Abstractions;
 
 namespace consumer_sample.Handlers;
 
-public class SampleEventReceiver : IEventReceiver<SampleEvent>
+public class SampleEventReceiver : EventReceiver<SampleEvent>
 {
-    public Task ReceiveAsync(SampleEvent @event, CancellationToken cancellationToken = default)
+    public override Task ReceiveAsync(SampleEvent @event, CancellationToken cancellationToken = default)
     {
         Console.WriteLine($"{@event.SomeValue} {@event.SomeOtherValue}");
 

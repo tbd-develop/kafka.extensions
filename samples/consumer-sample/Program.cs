@@ -15,8 +15,8 @@ var host = Host.CreateDefaultBuilder()
         services.AddKafka()
             .AddDispatchingConsumer(configure =>
             {
-                configure.AddEventReceiver<SampleEvent, SampleEventReceiver>();
-                configure.AddEventReceiver<SampleEvent, SampleEventReceiver>("configured.topic");
+                configure.AddEventReceiver<SampleEventReceiver>();
+                configure.AddEventReceiver<SampleEventReceiver>("configured.topic");
             })
             .AddBasicWorkerService();
     })
