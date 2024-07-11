@@ -172,7 +172,7 @@ To use a persisted outbox, you can include the Outbox.SqlServer package and then
                         configure
                             .UseSqlServerOutbox("connection-string");
                     });
-    ```
+```
     
 #### MongoDB Outbox
 
@@ -185,6 +185,6 @@ Another option for the Outbox implementation is the MongoDB Outbox. To use it, y
                         configure
                             .UseMongoDbOutbox("connection-string", "database-name");
                     });
-    ``` 
+``` 
 
 If you try and use the default publisher and the outbox, you will get an exception at run time.
