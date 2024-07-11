@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Outbox.Sql
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "outbox-sql-sample", "samples\outbox-sql-sample\outbox-sql-sample.csproj", "{BABD0DC6-0620-4F20-9DD3-96F97535DC39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Outbox.MongoDb", "src\TbdDevelop.Kafka.Outbox.MongoDb\TbdDevelop.Kafka.Outbox.MongoDb.csproj", "{ABA5AA81-B047-46A8-A6C3-B7E8C97BAE70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "outbox-mongodb-sample", "samples\outbox-mongodb-sample\outbox-mongodb-sample.csproj", "{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +89,14 @@ Global
 		{BABD0DC6-0620-4F20-9DD3-96F97535DC39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BABD0DC6-0620-4F20-9DD3-96F97535DC39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BABD0DC6-0620-4F20-9DD3-96F97535DC39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABA5AA81-B047-46A8-A6C3-B7E8C97BAE70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABA5AA81-B047-46A8-A6C3-B7E8C97BAE70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABA5AA81-B047-46A8-A6C3-B7E8C97BAE70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABA5AA81-B047-46A8-A6C3-B7E8C97BAE70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
@@ -93,5 +105,6 @@ Global
 		{52FE0675-768A-4A8B-AD73-AE074BEE473B} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 		{AF7DA3F2-D477-475B-BF9A-C7FADD30E20A} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 		{BABD0DC6-0620-4F20-9DD3-96F97535DC39} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
+		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}
 	EndGlobalSection
 EndGlobal
