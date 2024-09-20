@@ -20,4 +20,8 @@ await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hell
 await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello Another World", SomeOtherValue = 99 },
     "configured.topic");
 
+await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid());
+
+await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid(), "configured.topic");
+
 await host.RunAsync();

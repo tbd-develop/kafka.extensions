@@ -25,4 +25,8 @@ var publisher = host.Services.GetRequiredService<IEventPublisher>();
 await publisher.PublishAsync(Guid.NewGuid(),
     new SampleEvent { SomeValue = $"Hello, World {DateTime.UtcNow}", SomeOtherValue = 101 });
 
+await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid());
+
+await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid(), "configured.topic");
+
 await host.RunAsync();
