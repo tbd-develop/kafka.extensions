@@ -4,6 +4,7 @@ public interface IOutboxMessage
 {
     Guid Key { get; }
     DateTime AddedOn { get; }
-    public object Event { get; }
+    public Type EventType { get; }
+    public object? Event { get; }
     public string? Topic { get; }
 }

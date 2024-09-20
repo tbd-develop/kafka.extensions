@@ -38,18 +38,25 @@ public class TopicConsumer<TEvent>(
 
             if (result.Message is null) continue;
 
-            var @event = JsonSerializer.Deserialize<TEvent>(result.Message.Value, DefaultJsonSerializerOptions);
-
-            if (@event is null)
+            if (!string.IsNullOrEmpty(result.Message.Value))
             {
-                logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
-                    topicToSubscribe,
-                    result.Message.Value);
+                var @event = JsonSerializer.Deserialize<TEvent>(result.Message.Value, DefaultJsonSerializerOptions);
 
-                continue;
+                if (@event is null)
+                {
+                    logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
+                        topicToSubscribe,
+                        result.Message.Value);
+
+                    continue;
+                }
+
+                await eventReceiver.ReceiveAsync(@event, cancellationToken);
             }
-
-            await eventReceiver.ReceiveAsync(@event, cancellationToken);
+            else
+            {
+                await eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
+            }
 
             consumer.Commit(result);
         }

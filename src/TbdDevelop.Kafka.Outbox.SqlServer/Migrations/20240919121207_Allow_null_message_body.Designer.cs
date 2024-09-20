@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TbdDevelop.Kafka.Outbox.SqlServer.Context;
 
@@ -11,9 +12,11 @@ using TbdDevelop.Kafka.Outbox.SqlServer.Context;
 namespace TbdDevelop.Kafka.Outbox.SqlServer.Migrations
 {
     [DbContext(typeof(OutboxDbContext))]
-    partial class OutboxDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240919121207_Allow_null_message_body")]
+    partial class Allow_null_message_body
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

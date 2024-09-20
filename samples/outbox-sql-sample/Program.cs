@@ -42,8 +42,13 @@ var publisher = app.Services.GetRequiredService<IEventPublisher>();
 
 var key = Guid.NewGuid();
 
-await publisher.PublishAsync(key, new SampleEvent { SomeValue = "Hello, World", SomeOtherValue = 99 });
-await publisher.PublishAsync(key, new SampleEvent { SomeValue = "Hello, Another World", SomeOtherValue = 10001 });
+await publisher.PublishAsync(key, new SampleEvent { SomeValue = "Hello, World SQL Outbox", SomeOtherValue = 99 });
+await publisher.PublishAsync(key,
+    new SampleEvent { SomeValue = "Hello, Another World SQL Outbox", SomeOtherValue = 10001 });
+
+await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid());
+
+await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid(), "configured.topic");
 
 var factory = app.Services.GetRequiredService<IDbContextFactory<OutboxDbContext>>();
 

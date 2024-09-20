@@ -14,6 +14,22 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = typeof(TEvent).AssemblyQualifiedName!,
+            Content = null,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
@@ -24,6 +40,23 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
             Key = key,
             Type = @event.GetType().AssemblyQualifiedName!,
             Content = JsonSerializer.Serialize(@event, SerializerOptions),
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = typeof(TEvent).AssemblyQualifiedName!,
+            Content = null,
+            Topic = topic,
             DateAdded = DateTime.UtcNow
         }, cancellationToken);
 
@@ -68,7 +101,9 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
             return null;
         }
 
-        var @event = JsonSerializer.Deserialize(message.Content, type, SerializerOptions);
+        var @event = message.Content is not null
+            ? JsonSerializer.Deserialize(message.Content, type, SerializerOptions)
+            : null;
 
         return (IOutboxMessage)Activator.CreateInstance(
             typeof(SqlOutboxMessage<>).MakeGenericType(type),
@@ -102,10 +137,10 @@ public class SqlServerOutbox(IDbContextFactory<OutboxDbContext> factory) : IMess
         int id,
         Guid key,
         DateTime dateAdded,
-        TEvent @event,
+        TEvent? @event,
         string? topic = null)
         : OutboxMessage<TEvent>(key, dateAdded, @event, topic), ISqlOutboxMessage
-        where TEvent : IEvent
+        where TEvent : class, IEvent
     {
         public int Id { get; } = id;
     }

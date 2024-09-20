@@ -8,6 +8,17 @@ public class InMemoryMessageOutbox : IMessageOutbox
 {
     private readonly ConcurrentDictionary<Guid, IOutboxMessage> _outbox = new();
 
+    public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await Task.Run(() =>
+        {
+            var message = new InMemoryOutboxMessage<TEvent>(Guid.NewGuid(), key, DateTime.UtcNow);
+
+            _outbox.TryAdd(message.Id, message);
+        });
+    }
+
     public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
@@ -17,6 +28,17 @@ public class InMemoryMessageOutbox : IMessageOutbox
 
             _outbox.TryAdd(message.Id, message);
         }, cancellationToken);
+    }
+
+    public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await Task.Run(() =>
+        {
+            var message = new InMemoryOutboxMessage<TEvent>(Guid.NewGuid(), key, DateTime.UtcNow, null, topic);
+
+            _outbox.TryAdd(message.Id, message);
+        });
     }
 
     public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
@@ -58,10 +80,10 @@ public class InMemoryMessageOutbox : IMessageOutbox
         Guid id,
         Guid key,
         DateTime dateAdded,
-        TEvent @event,
+        TEvent? @event = null,
         string? topic = null)
         : OutboxMessage<TEvent>(key, dateAdded, @event, topic), IInMemoryOutboxMessage
-        where TEvent : IEvent
+        where TEvent : class, IEvent
     {
         public Guid Id { get; } = id;
     }

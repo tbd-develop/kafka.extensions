@@ -3,6 +3,7 @@
 public interface IEventReceiver
 {
     Task ReceiveAsync(object @event, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid key, CancellationToken cancellationToken = default);
 }
 
 public interface IEventReceiver<in TEvent> : IEventReceiver
@@ -15,6 +16,8 @@ public abstract class EventReceiver<TEvent> : IEventReceiver<TEvent>
     where TEvent : IEvent
 {
     public abstract Task ReceiveAsync(TEvent @event, CancellationToken cancellationToken = default);
+
+    public virtual Task DeleteAsync(Guid key, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
     public Task ReceiveAsync(object @event, CancellationToken cancellationToken = default)
     {

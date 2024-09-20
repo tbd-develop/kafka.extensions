@@ -1,7 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using consumer_sample.Handlers;
-using events;
+﻿using consumer_sample.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TbdDevelop.Kafka.Extensions.Infrastructure;

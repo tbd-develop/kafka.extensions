@@ -6,11 +6,13 @@ namespace TbdDevelop.Kafka.Extensions.Serializers;
 public class EventSerializer<TEvent> : ISerializer<TEvent>
     where TEvent : class
 {
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public byte[] Serialize(TEvent data, SerializationContext context)
     {
-        return JsonSerializer.SerializeToUtf8Bytes(data, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        return JsonSerializer.SerializeToUtf8Bytes(data, Options);
     }
 }
