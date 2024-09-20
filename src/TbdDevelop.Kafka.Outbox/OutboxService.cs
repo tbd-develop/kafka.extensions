@@ -31,7 +31,14 @@ public class OutboxService(
 
                     if (message is not null)
                     {
-                        await PublishMessage(message, stoppingToken);
+                        if (message.Event is not null)
+                        {
+                            await PublishMessage(message, stoppingToken);
+                        }
+                        else
+                        {
+                            await PublishDeleteMessage(message, stoppingToken);
+                        }
 
                         await outbox.Commit(message, stoppingToken);
 
@@ -58,8 +65,6 @@ public class OutboxService(
 
     private async Task PublishMessage(IOutboxMessage message, CancellationToken cancellationToken)
     {
-        var type = message.Event.GetType();
-
         var method =
             typeof(OutboxService).GetMethod(nameof(PublishEvent), BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -68,14 +73,49 @@ public class OutboxService(
             throw new Exception("Unable to publish message");
         }
 
-        var genericMethod = method.MakeGenericMethod(type);
+        var genericMethod = method.MakeGenericMethod(message.EventType);
 
-        await (Task)genericMethod.Invoke(this, [message.Key, message.Event, cancellationToken])!;
+        await (Task)genericMethod.Invoke(this, [message.Key, message.Event, message.Topic, cancellationToken])!;
     }
 
-    private async Task PublishEvent<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken)
+    private async Task PublishDeleteMessage(IOutboxMessage message, CancellationToken cancellationToken)
+    {
+        var method =
+            typeof(OutboxService).GetMethod(nameof(PublishDelete), BindingFlags.NonPublic | BindingFlags.Instance);
+
+        if (method is null)
+        {
+            throw new Exception("Unable to publish message");
+        }
+
+        var genericMethod = method.MakeGenericMethod(message.EventType);
+
+        await (Task)genericMethod.Invoke(this, [message.Key, message.Topic, cancellationToken])!;
+    }
+
+    private async Task PublishEvent<TEvent>(Guid key, TEvent @event, string? topic, CancellationToken cancellationToken)
         where TEvent : class, IEvent
     {
-        await publisher.PublishAsync(key, @event, cancellationToken);
+        if (topic is not null)
+        {
+            await publisher.PublishAsync(key, @event, topic, cancellationToken);
+        }
+        else
+        {
+            await publisher.PublishAsync(key, @event, cancellationToken);
+        }
+    }
+
+    private async Task PublishDelete<TEvent>(Guid key, string? topic, CancellationToken cancellationToken)
+        where TEvent : class, IEvent
+    {
+        if (topic is not null)
+        {
+            await publisher.PublishDeleteAsync<TEvent>(key, topic, cancellationToken);
+        }
+        else
+        {
+            await publisher.PublishDeleteAsync<TEvent>(key, cancellationToken);
+        }
     }
 }

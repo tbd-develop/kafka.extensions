@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
@@ -7,21 +6,15 @@ using TbdDevelop.Kafka.Extensions.Serializers;
 
 namespace TbdDevelop.Kafka.Extensions.Publishing;
 
-public class KafkaPublisher : IEventPublisher
+public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration configuration)
+    : IEventPublisher
 {
-    private readonly ILogger _logger;
-    private readonly KafkaConfiguration _configuration;
-
-    public KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration configuration)
-    {
-        _logger = logger;
-        _configuration = configuration;
-    }
+    private readonly ILogger _logger = logger;
 
     public async Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
-        if (!_configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+        if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
         {
             _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
@@ -31,11 +24,44 @@ public class KafkaPublisher : IEventPublisher
         await PublishAsync(key, @event, topic!, cancellationToken);
     }
 
+    public async Task PublishDeleteAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+        {
+            _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
+
+            return;
+        }
+
+        await PublishDeleteAsync<TEvent>(key, topic!, cancellationToken);
+    }
+
+    public async Task PublishDeleteAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        using var producer = new ProducerBuilder<Guid, TEvent>(configuration.Producer)
+            .SetLogHandler((_, logMessage) => _logger?.LogInformation(logMessage.Message))
+            .SetErrorHandler((_, error) => _logger?.LogError(error.Reason))
+            .SetKeySerializer(new GuidKeySerializer())
+            .SetValueSerializer(new NullSerializer<TEvent>())
+            .Build();
+
+        await producer.ProduceAsync(topic,
+            new Message<Guid, TEvent>()
+            {
+                Key = key,
+                Timestamp = new Timestamp(DateTime.UtcNow)
+            }, cancellationToken);
+
+        producer.Flush(cancellationToken);
+    }
+
     public async Task PublishAsync<TEvent>(Guid key, TEvent @event, string topic,
         CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
-        using var producer = new ProducerBuilder<Guid, TEvent>(_configuration.Producer)
+        using var producer = new ProducerBuilder<Guid, TEvent>(configuration.Producer)
             .SetLogHandler((_, logMessage) => _logger?.LogInformation(logMessage.Message))
             .SetErrorHandler((_, error) => _logger?.LogError(error.Reason))
             .SetKeySerializer(new GuidKeySerializer())
