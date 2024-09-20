@@ -31,6 +31,39 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = typeof(TEvent).AssemblyQualifiedName!,
+            EventBody = null,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = typeof(TEvent).AssemblyQualifiedName!,
+            EventBody = null,
+            Topic = topic,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
         CancellationToken cancellationToken = default) where TEvent : class, IEvent
     {
@@ -69,7 +102,9 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
             return null;
         }
 
-        var @event = JsonSerializer.Deserialize(message.EventBody, type, SerializerOptions);
+        var @event = message.EventBody != null
+            ? JsonSerializer.Deserialize(message.EventBody, type, SerializerOptions)
+            : null;
 
         return (IOutboxMessage)Activator.CreateInstance(
             typeof(MongoDbOutboxMessage<>).MakeGenericType(type),
@@ -103,10 +138,10 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
         ObjectId id,
         Guid key,
         DateTime dateAdded,
-        TEvent @event,
+        TEvent? @event = null,
         string? topic = null)
         : OutboxMessage<TEvent>(key, dateAdded, @event, topic), IMongoDbOutboxMessage
-        where TEvent : IEvent
+        where TEvent : class, IEvent
     {
         public ObjectId Id { get; } = id;
     }
