@@ -14,14 +14,23 @@ public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration c
     public async Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class, IEvent
     {
-        if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+        try
         {
-            _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
+            if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+            {
+                _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
-            return;
+                return;
+            }
+
+            await PublishAsync(key, @event, topic!, cancellationToken);
         }
-
-        await PublishAsync(key, @event, topic!, cancellationToken);
+        catch (ArgumentNullException exception)
+        {
+            _logger.LogCritical("Configuration does not provide topic for {EventType} ({Exception})",
+                typeof(TEvent).Name,
+                exception);
+        }
     }
 
     public async Task PublishDeleteAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
