@@ -9,6 +9,8 @@ public class OutboxDbContext(DbContextOptions<OutboxDbContext> options) : DbCont
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(OutboxDbContext).Assembly);
+        modelBuilder
+            .HasDefaultSchema("outbox")
+            .ApplyConfigurationsFromAssembly(typeof(OutboxDbContext).Assembly);
     }
 }

@@ -11,9 +11,9 @@ var host = Host.CreateDefaultBuilder()
         services.AddKafka(configure =>
             {
                 configure.UsingConsul(new ConsulConfiguration(
-                    "http://localhost:8500",
+                    "http://localhost:8599",
                     "Kafka",
-                    "testing-topics"));
+                    "kafka-configuration"));
             })
             .AddDefaultPublisher();
     })
