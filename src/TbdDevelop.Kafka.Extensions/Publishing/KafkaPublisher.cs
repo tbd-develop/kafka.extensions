@@ -50,8 +50,8 @@ public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration c
         where TEvent : class, IEvent
     {
         using var producer = new ProducerBuilder<Guid, TEvent>(configuration.Producer)
-            .SetLogHandler((_, logMessage) => _logger?.LogInformation(logMessage.Message))
-            .SetErrorHandler((_, error) => _logger?.LogError(error.Reason))
+            .SetLogHandler((_, logMessage) => _logger.LogInformation(logMessage.Message))
+            .SetErrorHandler((_, error) => _logger.LogError(error.Reason))
             .SetKeySerializer(new GuidKeySerializer())
             .SetValueSerializer(new NullSerializer<TEvent>())
             .Build();
@@ -71,8 +71,8 @@ public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration c
         where TEvent : class, IEvent
     {
         using var producer = new ProducerBuilder<Guid, TEvent>(configuration.Producer)
-            .SetLogHandler((_, logMessage) => _logger?.LogInformation(logMessage.Message))
-            .SetErrorHandler((_, error) => _logger?.LogError(error.Reason))
+            .SetLogHandler((_, logMessage) => _logger.LogInformation(logMessage.Message))
+            .SetErrorHandler((_, error) => _logger.LogError(error.Reason))
             .SetKeySerializer(new GuidKeySerializer())
             .SetValueSerializer(new EventSerializer<TEvent>())
             .Build();
