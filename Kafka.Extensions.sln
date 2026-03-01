@@ -35,6 +35,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Outbox.Mon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "outbox-mongodb-sample", "samples\outbox-mongodb-sample\outbox-mongodb-sample.csproj", "{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TbdDevelop.Kafka.Outbox.Postgres", "src\TbdDevelop.Kafka.Outbox.Postgres\TbdDevelop.Kafka.Outbox.Postgres.csproj", "{F7BC6ECC-B6A7-40D6-987F-D64B66E421B2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0C89A8F1-71DD-4290-B3A5-F53A0CD1B99F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +101,10 @@ Global
 		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BBF49CF-66F6-446C-BC22-88BC5F93BBF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7BC6ECC-B6A7-40D6-987F-D64B66E421B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7BC6ECC-B6A7-40D6-987F-D64B66E421B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7BC6ECC-B6A7-40D6-987F-D64B66E421B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7BC6ECC-B6A7-40D6-987F-D64B66E421B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6CA76BD8-A202-4F97-A93C-AEFC0BA04EC0} = {18817C3F-96E4-4A58-8778-BD48E1DC8E93}

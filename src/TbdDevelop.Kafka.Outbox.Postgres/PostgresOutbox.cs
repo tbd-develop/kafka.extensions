@@ -1,0 +1,152 @@
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using TbdDevelop.Kafka.Abstractions;
+using TbdDevelop.Kafka.Outbox.Contracts;
+using TbdDevelop.Kafka.Outbox.Postgres.Context;
+using TbdDevelop.Kafka.Outbox.Postgres.Models;
+
+namespace TbdDevelop.Kafka.Outbox.Postgres;
+
+public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessageOutbox
+{
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = typeof(TEvent).AssemblyQualifiedName!,
+            Content = null,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = @event.GetType().AssemblyQualifiedName!,
+            Content = JsonSerializer.Serialize(@event, SerializerOptions),
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+        where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = typeof(TEvent).AssemblyQualifiedName!,
+            Content = null,
+            Topic = topic,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
+        CancellationToken cancellationToken = default) where TEvent : class, IEvent
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        await context.OutboxMessages.AddAsync(new OutboxMessageContent
+        {
+            Key = key,
+            Type = @event.GetType().AssemblyQualifiedName!,
+            Content = JsonSerializer.Serialize(@event, SerializerOptions),
+            Topic = topic,
+            DateAdded = DateTime.UtcNow
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        var message = await context.OutboxMessages
+            .Where(m => m.DateProcessed == null)
+            .OrderBy(m => m.DateAdded)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return message is null ? null : BuildOutboxMessage(message);
+    }
+
+    private IOutboxMessage? BuildOutboxMessage(OutboxMessageContent message)
+    {
+        var type = Type.GetType(message.Type);
+
+        if (type is null)
+        {
+            return null;
+        }
+
+        var @event = message.Content is not null
+            ? JsonSerializer.Deserialize(message.Content, type, SerializerOptions)
+            : null;
+
+        return (IOutboxMessage)Activator.CreateInstance(
+            typeof(SqlOutboxMessage<>).MakeGenericType(type),
+            message.Id, message.Key, message.DateAdded, @event, message.Topic)!;
+    }
+
+    public async Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+        if (message is not ISqlOutboxMessage sqlMessage)
+        {
+            return;
+        }
+
+        var current =
+            await context.OutboxMessages.FirstOrDefaultAsync(m =>
+                m.Id == sqlMessage.Id, cancellationToken);
+
+        if (current is null)
+        {
+            return;
+        }
+
+        current.DateProcessed = DateTime.UtcNow;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private sealed class SqlOutboxMessage<TEvent>(
+        int id,
+        Guid key,
+        DateTime dateAdded,
+        TEvent? @event,
+        string? topic = null)
+        : OutboxMessage<TEvent>(key, dateAdded, @event, topic), ISqlOutboxMessage
+        where TEvent : class, IEvent
+    {
+        public int Id { get; } = id;
+    }
+
+    private interface ISqlOutboxMessage : IOutboxMessage
+    {
+        int Id { get; }
+    }
+}
