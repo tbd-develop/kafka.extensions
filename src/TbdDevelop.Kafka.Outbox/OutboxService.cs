@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +11,7 @@ using TbdDevelop.Kafka.Outbox.Contracts;
 namespace TbdDevelop.Kafka.Outbox;
 
 public class OutboxService(
-    IMessageOutbox outbox,
+    IServiceScopeFactory scopeFactory,
     KafkaPublisher publisher,
     ILogger<OutboxService> logger,
     IOptions<OutboxPublishingConfiguration> options) : BackgroundService
@@ -27,6 +28,10 @@ public class OutboxService(
             {
                 try
                 {
+                    await using var scope = scopeFactory.CreateAsyncScope();
+
+                    var outbox = scope.ServiceProvider.GetRequiredService<IMessageOutbox>();
+
                     var message = await outbox.RetrieveNextMessage(stoppingToken);
 
                     if (message is not null)
@@ -70,7 +75,7 @@ public class OutboxService(
 
         if (method is null)
         {
-            throw new Exception("Unable to publish message");
+            throw new InvalidOperationException("Unable to publish message");
         }
 
         var genericMethod = method.MakeGenericMethod(message.EventType);
@@ -85,7 +90,7 @@ public class OutboxService(
 
         if (method is null)
         {
-            throw new Exception("Unable to publish message");
+            throw new InvalidOperationException("Unable to publish message");
         }
 
         var genericMethod = method.MakeGenericMethod(message.EventType);
