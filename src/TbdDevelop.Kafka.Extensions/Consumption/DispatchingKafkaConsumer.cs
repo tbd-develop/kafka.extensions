@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Extensions.Contracts;
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
@@ -10,12 +11,17 @@ public class DispatchingKafkaConsumer(
     private const int TimeoutSeconds = 5;
     private const int Backoff = 3;
 
-    private readonly IDictionary<string, int> _retryCounter = new Dictionary<string, int>();
+    private readonly IDictionary<string, int> _retryCounter = new ConcurrentDictionary<string, int>();
 
     public async Task BeginConsumeAsync(CancellationToken cancellationToken = default)
     {
         var tasks = consumers
-            .Select(consumer => RunWithRetry(consumer, cancellationToken))
+            .Select(consumer =>
+                Task.Factory.StartNew(
+                    () => RunWithRetry(consumer, cancellationToken),
+                    cancellationToken,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default))
             .ToList();
 
         await Task.WhenAll(tasks);
