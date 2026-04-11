@@ -51,7 +51,7 @@ The configuration under consumer and producer are standard Kafka configuration v
 Kafka
 producer on consumer, you can put them in here.
 
-** Note - If you do not enable ``"enable.auto.commit": "true"`` in your configuration, Kafka will auto commit your messages periodically (See [Confluent Documentation](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)). A message you've received that errors may already be committed, and therefore skipped on restart.
+** Note - If you do not disable auto commit with  ``"enable.auto.commit": "false"`` in your configuration, Kafka will auto commit your messages periodically (See [Confluent Documentation](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)). A message you've received that errors may already be committed, and therefore skipped on restart.
  
 #### Publishing (Producers)
 
@@ -146,6 +146,9 @@ services.AddKafka()
 ```
 
 This will add a hosted service and then start consuming when the service starts.
+
+A task is created per Topic to process and will run in parallel. A retry process is wrapped around consumption
+ to pause if there is a minor issue. After three attempts it will give up. If auto commit is not disabled, this will likely move to the next message.
 
 ### Outbox
 
