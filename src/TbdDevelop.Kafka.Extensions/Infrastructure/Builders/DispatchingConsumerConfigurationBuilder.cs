@@ -71,6 +71,8 @@ public class DispatchingConsumerConfigurationBuilder(
 
     public IEventConsumer Build()
     {
-        return new DispatchingKafkaConsumer(_consumers);
+        return new DispatchingKafkaConsumer(
+            loggerFactory.CreateLogger<DispatchingKafkaConsumer>(),
+            _consumers);
     }
 }

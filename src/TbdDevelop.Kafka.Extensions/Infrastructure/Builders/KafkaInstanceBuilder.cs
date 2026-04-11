@@ -21,7 +21,7 @@ public class KafkaInstanceBuilder(IServiceCollection services)
 
     public KafkaInstanceBuilder AddDispatchingConsumer(Action<DispatchingConsumerConfigurationBuilder> configure)
     {
-        services.AddSingleton<IEventConsumer>((provider) =>
+        services.AddSingleton<IEventConsumer>(provider =>
         {
             var builder =
                 new DispatchingConsumerConfigurationBuilder(

@@ -25,7 +25,8 @@ First you're going to need the configuration set up. Add a node to your appsetti
    "Consumer": {
       "group.id": "group-id",
       "bootstrap.servers": "localhost:9092",
-      "auto.offset.reset": "earliest"
+      "auto.offset.reset": "earliest",
+      "enable.auto.commit": "false"
     },
     "Topics": [
       {
@@ -50,6 +51,8 @@ The configuration under consumer and producer are standard Kafka configuration v
 Kafka
 producer on consumer, you can put them in here.
 
+** Note - If you do not enable ``"enable.auto.commit": "true"`` in your configuration, Kafka will auto commit your messages periodically (See [Confluent Documentation](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)). A message you've received that errors may already be committed, and therefore skipped on restart.
+ 
 #### Publishing (Producers)
 
 If you want to configure your application to Publish events, then you need to add the production components. So, in your

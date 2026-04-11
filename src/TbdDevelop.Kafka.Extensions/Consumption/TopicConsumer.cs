@@ -15,6 +15,8 @@ public class TopicConsumer<TEvent>(
     : ITopicConsumer
     where TEvent : class, IEvent
 {
+    public string Topic => topicToSubscribe;
+
     private static JsonSerializerOptions DefaultJsonSerializerOptions => new()
     {
         PropertyNameCaseInsensitive = true,
@@ -36,29 +38,51 @@ public class TopicConsumer<TEvent>(
         {
             var result = consumer.Consume(cancellationToken);
 
-            if (result.Message is null) continue;
-
-            if (!string.IsNullOrEmpty(result.Message.Value))
+            if (result.Message is null)
             {
-                var @event = JsonSerializer.Deserialize<TEvent>(result.Message.Value, DefaultJsonSerializerOptions);
+                continue;
+            }
 
-                if (@event is null)
+            try
+            {
+                if (!await HandleMessage(result, cancellationToken))
                 {
-                    logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
-                        topicToSubscribe,
-                        result.Message.Value);
-
                     continue;
                 }
 
-                await eventReceiver.ReceiveAsync(@event, cancellationToken);
+                consumer.Commit(result);
             }
-            else
+            catch (JsonException ex)
             {
-                await eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
+                logger.LogCritical(ex, "Failed to deserialize message on {Topic}, skipping.", topicToSubscribe);
+
+                consumer.Commit(result);
+            }
+        }
+    }
+
+    private async Task<bool> HandleMessage(ConsumeResult<Guid, string> result, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(result.Message.Value))
+        {
+            var @event = JsonSerializer.Deserialize<TEvent>(result.Message.Value, DefaultJsonSerializerOptions);
+
+            if (@event is null)
+            {
+                logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
+                    topicToSubscribe,
+                    result.Message.Value);
+
+                return false;
             }
 
-            consumer.Commit(result);
+            await eventReceiver.ReceiveAsync(@event, cancellationToken);
         }
+        else
+        {
+            await eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
+        }
+
+        return true;
     }
 }
