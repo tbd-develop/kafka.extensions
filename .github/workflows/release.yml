@@ -37,3 +37,5 @@ jobs:
       run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.Postgres/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .     
     - name: Push To Nuget
       run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+    - name: Push To GitHub Packages
+      run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/TbdDevelop/index.json --skip-duplicate      
