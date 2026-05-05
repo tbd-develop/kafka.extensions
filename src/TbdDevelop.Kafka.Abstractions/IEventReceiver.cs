@@ -7,13 +7,13 @@ public interface IEventReceiver
 }
 
 public interface IEventReceiver<in TEvent> : IEventReceiver
-    where TEvent : IEvent
+    where TEvent : class
 {
     Task ReceiveAsync(TEvent @event, CancellationToken cancellationToken = default);
 }
 
 public abstract class EventReceiver<TEvent> : IEventReceiver<TEvent>
-    where TEvent : IEvent
+    where TEvent : class
 {
     public abstract Task ReceiveAsync(TEvent @event, CancellationToken cancellationToken = default);
 

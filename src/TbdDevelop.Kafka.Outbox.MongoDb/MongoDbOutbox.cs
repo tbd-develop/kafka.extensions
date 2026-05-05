@@ -16,7 +16,7 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
     };
 
     public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
@@ -32,7 +32,7 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
     }
 
     public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
@@ -48,7 +48,7 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
     }
 
     public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
@@ -65,7 +65,7 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
     }
 
     public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
-        CancellationToken cancellationToken = default) where TEvent : class, IEvent
+        CancellationToken cancellationToken = default) where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
@@ -141,7 +141,7 @@ public class MongoDbOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessag
         TEvent? @event = null,
         string? topic = null)
         : OutboxMessage<TEvent>(key, dateAdded, @event, topic), IMongoDbOutboxMessage
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         public ObjectId Id { get; } = id;
     }

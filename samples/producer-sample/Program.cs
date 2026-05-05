@@ -1,4 +1,5 @@
 ﻿using events;
+using events.Envelopes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TbdDevelop.Kafka.Abstractions;
@@ -9,7 +10,8 @@ var host = Host.CreateDefaultBuilder()
     {
         services
             .AddKafka()
-            .AddDefaultPublisher();
+            .AddDefaultPublisher()
+            .WithEnvelopeCodec<SampleEnvelopeCodec>();
     })
     .Build();
 
@@ -19,6 +21,16 @@ await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hell
 
 await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello Another World", SomeOtherValue = 99 },
     "configured.topic");
+
+await publisher.PublishAsync(Guid.NewGuid(), new SampleEnvelope<SampleEvent>
+{
+    Category = "test-events",
+    Payload = new SampleEvent
+    {
+        SomeOtherValue = 94,
+        SomeValue = "1042"
+    }
+}, "envelope.sample");
 
 await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid());
 
