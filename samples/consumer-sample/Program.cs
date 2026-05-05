@@ -1,4 +1,5 @@
-﻿using consumer_sample.Handlers;
+﻿using consumer_sample.Receivers;
+using events.Envelopes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
@@ -7,14 +8,14 @@ using TbdDevelop.Kafka.Services.Infrastructure;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices(services =>
     {
-        services.AddSingleton<SampleEventReceiver>();
+        services.AddTransient<SampleEnvelopeReceiver>();
 
         services.AddKafka()
             .AddDispatchingConsumer(configure =>
             {
-                configure.AddEventReceiver<SampleEventReceiver>();
-                configure.AddEventReceiver<SampleEventReceiver>("configured.topic");
+                configure.AddEventReceiver<SampleEnvelopeReceiver>("enveloped-topics");
             })
+            .WithEnvelopeCodec<SampleEnvelopeCodec>()
             .AddBasicWorkerService();
     })
     .Build();

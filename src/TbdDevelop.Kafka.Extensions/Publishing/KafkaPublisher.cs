@@ -1,29 +1,48 @@
-﻿using Confluent.Kafka;
+﻿using System.Text;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
+using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Extensions.Serializers;
 
 namespace TbdDevelop.Kafka.Extensions.Publishing;
 
-public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration configuration)
-    : IEventPublisher
+public class KafkaPublisher
+    : IEventPublisher, IAsyncDisposable
 {
-    private readonly ILogger _logger = logger;
+    private readonly ILogger _logger;
+    private readonly KafkaConfiguration _configuration;
+    private readonly IProducer<Guid, byte[]> _producer;
+    private readonly IEnvelopeCodec? _codec;
+
+    public KafkaPublisher(
+        ILogger<KafkaPublisher> logger,
+        KafkaConfiguration configuration,
+        IProducer<Guid, byte[]> producer,
+        IEnvelopeCodec? codec = null)
+    {
+        _logger = logger;
+        _configuration = configuration;
+        _codec = codec;
+        _producer = producer;
+    }
 
     public async Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         try
         {
-            if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+            var (body, headers) = FetchBodyFromEnvelope(@event);
+
+            if (!_configuration.TryGetTopicFromEventType(body.GetType(), out string? topic))
             {
                 _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
                 return;
             }
 
-            await PublishAsync(key, @event, topic!, cancellationToken);
+            await PublishInternalAsync(key, body, headers, topic!, cancellationToken);
         }
         catch (ArgumentNullException exception)
         {
@@ -33,10 +52,18 @@ public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration c
         }
     }
 
-    public async Task PublishDeleteAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
+    public async Task PublishAsync<TEvent>(Guid key, TEvent @event, string topic,
+        CancellationToken cancellationToken = default) where TEvent : class
     {
-        if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+        var (body, headers) = FetchBodyFromEnvelope(@event);
+
+        await PublishInternalAsync(key, body, headers, topic!, cancellationToken);
+    }
+
+    public async Task PublishDeleteAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+        where TEvent : class
+    {
+        if (!_configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
         {
             _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
@@ -47,44 +74,82 @@ public class KafkaPublisher(ILogger<KafkaPublisher> logger, KafkaConfiguration c
     }
 
     public async Task PublishDeleteAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
-        using var producer = new ProducerBuilder<Guid, TEvent>(configuration.Producer)
-            .SetLogHandler((_, logMessage) => _logger.LogInformation(logMessage.Message))
-            .SetErrorHandler((_, error) => _logger.LogError(error.Reason))
-            .SetKeySerializer(new GuidKeySerializer())
-            .SetValueSerializer(new NullSerializer<TEvent>())
-            .Build();
-
-        await producer.ProduceAsync(topic,
-            new Message<Guid, TEvent>()
+        await _producer.ProduceAsync(topic,
+            new Message<Guid, byte[]>
             {
                 Key = key,
                 Timestamp = new Timestamp(DateTime.UtcNow)
             }, cancellationToken);
-
-        producer.Flush(cancellationToken);
     }
 
-    public async Task PublishAsync<TEvent>(Guid key, TEvent @event, string topic,
+    private async Task PublishInternalAsync(
+        Guid key,
+        object @event,
+        IDictionary<string, byte[]>? headers,
+        string topic,
         CancellationToken cancellationToken = default)
-        where TEvent : class, IEvent
     {
-        using var producer = new ProducerBuilder<Guid, TEvent>(configuration.Producer)
-            .SetLogHandler((_, logMessage) => _logger.LogInformation(logMessage.Message))
-            .SetErrorHandler((_, error) => _logger.LogError(error.Reason))
-            .SetKeySerializer(new GuidKeySerializer())
-            .SetValueSerializer(new EventSerializer<TEvent>())
-            .Build();
+        var message = new Message<Guid, byte[]>
+        {
+            Key = key,
+            Timestamp = ResolveTimestamp(@event, headers),
+            Value = @event.Serialize()
+        };
 
-        await producer.ProduceAsync(topic,
-            new Message<Guid, TEvent>()
+        if (headers is { Count: > 0 })
+        {
+            message.Headers = new Headers();
+
+            foreach (var (name, value) in headers)
             {
-                Key = key,
-                Timestamp = new Timestamp(@event.OccurredOn),
-                Value = @event
-            }, cancellationToken);
+                message.Headers.Add(name, value);
+            }
+        }
 
-        producer.Flush(cancellationToken);
+        await _producer.ProduceAsync(topic, message, cancellationToken);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _producer.Flush(TimeSpan.FromSeconds(10));
+        _producer.Dispose();
+
+        await Task.CompletedTask;
+    }
+
+    private static Timestamp ResolveTimestamp(object body, IDictionary<string, byte[]>? headers)
+    {
+        if (headers is not null && headers.TryGetValue("occurred-at", out var raw))
+        {
+            return new Timestamp(DateTimeOffset.Parse(Encoding.UTF8.GetString(raw)).UtcDateTime);
+        }
+
+        if (body is IEvent e)
+        {
+            return new Timestamp(e.OccurredOn);
+        }
+
+        return new Timestamp(DateTime.UtcNow);
+    }
+
+    private (object body, IDictionary<string, byte[]>? headers) FetchBodyFromEnvelope<TEvent>(TEvent @event)
+        where TEvent : class
+    {
+        object body;
+        IDictionary<string, byte[]>? headers = null;
+
+        if (_codec is not null && _codec.TryUnwrap(@event, out var payload, out var hdrs))
+        {
+            body = payload;
+            headers = hdrs;
+        }
+        else
+        {
+            body = @event;
+        }
+
+        return (body, headers);
     }
 }

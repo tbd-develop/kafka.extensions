@@ -51,7 +51,7 @@ public class DispatchingConsumerConfigurationBuilder(
     }
 
     private DispatchingConsumerConfigurationBuilder AddEventReceiver<TEvent, TConsumer>(string? topic = null)
-        where TEvent : class, IEvent
+        where TEvent : class
         where TConsumer : IEventReceiver<TEvent>
     {
         if (topic is null && !configuration.TryGetTopicFromEventType<TEvent>(out topic))
@@ -59,11 +59,17 @@ public class DispatchingConsumerConfigurationBuilder(
             throw new TopicConfigurationException($"No topic found for event type {typeof(TEvent).Name}");
         }
 
+        if (topic is not null)
+        {
+            configuration.TryGetTopicByName(topic, out topic);
+        }
+
         _consumers.Add(new TopicConsumer<TEvent>(
             topic!,
             configuration.Consumer,
             serviceProvider.GetRequiredService<TConsumer>(),
-            loggerFactory.CreateLogger<TopicConsumer<TEvent>>()
+            loggerFactory.CreateLogger<TopicConsumer<TEvent>>(),
+            serviceProvider.GetService<IEnvelopeCodec>()
         ));
 
         return this;

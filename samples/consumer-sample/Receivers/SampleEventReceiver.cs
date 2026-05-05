@@ -1,7 +1,7 @@
 ﻿using events;
 using TbdDevelop.Kafka.Abstractions;
 
-namespace consumer_sample.Handlers;
+namespace consumer_sample.Receivers;
 
 public class SampleEventReceiver : EventReceiver<SampleEvent>
 {
