@@ -194,3 +194,76 @@ Another option for the Outbox implementation is the MongoDB Outbox. To use it, y
 ``` 
 
 If you try and use the default publisher and the outbox, you will get an exception at run time.
+
+#### Envelope
+
+If you need to deliver multiple event types to a single topic, you can use an Envelope. Multiple Publishers -> Single Topic -> Single Consumer. 
+
+To create an enveloped message, you define the Envelope;
+
+```csharp
+public class Envelope<TPayload>
+{
+    public string Field {get;set;}
+    public TPayload Payload {get;set;}
+}
+```
+
+and you define the codec
+
+```csharp
+public class SampleEnvelopeCodec : IEnvelopeCodec
+{
+    public Type GetPayloadType(Type messageType)
+        => messageType.IsGenericType && messageType.GetGenericTypeDefinition() ==
+            typeof(SampleEnvelope<>)
+                ? messageType.GetGenericArguments()[0]
+                : messageType;
+
+    public bool TryUnwrap(object message, out object payload, out IDictionary<string, byte[]> headers)
+    {
+        var t = message.GetType();
+
+        if (!t.IsGenericType || t.GetGenericTypeDefinition() != typeof(SampleEnvelope<>))
+        {
+            payload = null!;
+            headers = null!;
+            return false;
+        }
+
+        dynamic env = message;
+        payload = env.Payload;
+
+        headers = new Dictionary<string, byte[]>
+        {
+            ["field"] = Utf8(env.Field),
+        };
+        return true;
+    }
+
+    public object Wrap(object payload, IReadOnlyDictionary<string, byte[]> headers)
+    {
+        var envelopeType = typeof(SampleEnvelope<>).MakeGenericType(payload.GetType());
+        var envelope = RuntimeHelpers.GetUninitializedObject(envelopeType);
+
+        Set(envelope, "Field", Str(headers["field"]));
+        Set(envelope, "Payload", payload);
+        
+        return envelope;
+    }
+
+    private static void Set(object obj, string name, object value)
+        => obj.GetType().GetProperty(name)!.SetValue(obj, value);
+
+    private static string Str(byte[] b) => Encoding.UTF8.GetString(b);
+
+    private static byte[] Utf8(string s) => Encoding.UTF8.GetBytes(s);
+}
+```
+
+Once you've defined the codec, you need to setup the codec when configuring the Kafka Extensions;
+
+```csharp
+    services.AddKafka()
+            .WithEnvelopeCodec<SampleEnvelopeCodec>()
+```
