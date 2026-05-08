@@ -4,6 +4,7 @@ using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 using TbdDevelop.Kafka.Extensions.Publishing;
+using TbdDevelop.Kafka.Outbox.Configuration;
 using TbdDevelop.Kafka.Outbox.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Outbox.Infrastructure;

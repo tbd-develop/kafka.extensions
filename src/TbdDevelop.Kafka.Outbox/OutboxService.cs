@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Publishing;
+using TbdDevelop.Kafka.Outbox.Configuration;
 using TbdDevelop.Kafka.Outbox.Contracts;
 
 namespace TbdDevelop.Kafka.Outbox;

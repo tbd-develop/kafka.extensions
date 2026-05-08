@@ -1,4 +1,4 @@
-﻿namespace TbdDevelop.Kafka.Extensions.Configuration;
+﻿namespace TbdDevelop.Kafka.Outbox.Configuration;
 
 public class OutboxPublishingConfiguration
 {
