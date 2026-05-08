@@ -100,7 +100,7 @@ public class OutboxService(
     }
 
     private async Task PublishEvent<TEvent>(Guid key, TEvent @event, string? topic, CancellationToken cancellationToken)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         if (topic is not null)
         {
@@ -113,7 +113,7 @@ public class OutboxService(
     }
 
     private async Task PublishDelete<TEvent>(Guid key, string? topic, CancellationToken cancellationToken)
-        where TEvent : class, IEvent
+        where TEvent : class
     {
         if (topic is not null)
         {
