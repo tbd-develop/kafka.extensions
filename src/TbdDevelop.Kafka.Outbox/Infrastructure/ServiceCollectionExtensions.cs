@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Confluent.Kafka;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 using TbdDevelop.Kafka.Extensions.Publishing;
+using TbdDevelop.Kafka.Extensions.Serializers;
 using TbdDevelop.Kafka.Outbox.Configuration;
 using TbdDevelop.Kafka.Outbox.Infrastructure.Builders;
 
@@ -22,9 +25,22 @@ public static class ServiceCollectionExtensions
             var outboxBuilder = new OutboxConfigurationBuilder(services);
 
             configure(outboxBuilder);
+            
+            services.AddSingleton<IProducer<Guid, byte[]>>(provider =>
+            {
+                var configuration = provider.GetRequiredService<KafkaConfiguration>();
+                var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger<KafkaPublisher>();
 
-            services.AddTransient<IEventPublisher, OutboxPublisher>();
-            services.AddTransient<KafkaPublisher>();
+                return new ProducerBuilder<Guid, byte[]>(configuration.Producer)
+                    .SetLogHandler((_, logMessage) => logger.LogInformation("{Message}", logMessage.Message))
+                    .SetErrorHandler((_, error) => logger.LogError("{Reason}", error.Reason))
+                    .SetKeySerializer(new GuidKeySerializer())
+                    .Build();
+            });
+            
+            services.AddSingleton<IEventPublisher, OutboxPublisher>();
+            services.AddSingleton<KafkaPublisher>();
         });
 
         return builder;
