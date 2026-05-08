@@ -7,25 +7,14 @@ using TbdDevelop.Kafka.Extensions.Infrastructure;
 
 namespace TbdDevelop.Kafka.Extensions.Publishing;
 
-public class KafkaPublisher
+public class KafkaPublisher(
+    ILogger<KafkaPublisher> logger,
+    KafkaConfiguration configuration,
+    IProducer<Guid, byte[]> producer,
+    IEnvelopeCodec? codec = null)
     : IEventPublisher, IAsyncDisposable
 {
-    private readonly ILogger _logger;
-    private readonly KafkaConfiguration _configuration;
-    private readonly IProducer<Guid, byte[]> _producer;
-    private readonly IEnvelopeCodec? _codec;
-
-    public KafkaPublisher(
-        ILogger<KafkaPublisher> logger,
-        KafkaConfiguration configuration,
-        IProducer<Guid, byte[]> producer,
-        IEnvelopeCodec? codec = null)
-    {
-        _logger = logger;
-        _configuration = configuration;
-        _codec = codec;
-        _producer = producer;
-    }
+    private readonly ILogger _logger = logger;
 
     public async Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : class
@@ -34,7 +23,7 @@ public class KafkaPublisher
         {
             var (body, headers) = FetchBodyFromEnvelope(@event);
 
-            if (!_configuration.TryGetTopicFromEventType(body.GetType(), out string? topic))
+            if (!configuration.TryGetTopicFromEventType(body.GetType(), out string? topic))
             {
                 _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
@@ -62,7 +51,7 @@ public class KafkaPublisher
     public async Task PublishDeleteAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
         where TEvent : class
     {
-        if (!_configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+        if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
         {
             _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
@@ -75,7 +64,7 @@ public class KafkaPublisher
     public async Task PublishDeleteAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
         where TEvent : class
     {
-        await _producer.ProduceAsync(topic,
+        await producer.ProduceAsync(topic,
             new Message<Guid, byte[]>
             {
                 Key = key,
@@ -107,13 +96,13 @@ public class KafkaPublisher
             }
         }
 
-        await _producer.ProduceAsync(topic, message, cancellationToken);
+        await producer.ProduceAsync(topic, message, cancellationToken);
     }
 
     public async ValueTask DisposeAsync()
     {
-        _producer.Flush(TimeSpan.FromSeconds(10));
-        _producer.Dispose();
+        producer.Flush(TimeSpan.FromSeconds(10));
+        producer.Dispose();
 
         await Task.CompletedTask;
     }
@@ -139,7 +128,7 @@ public class KafkaPublisher
         object body;
         IDictionary<string, byte[]>? headers = null;
 
-        if (_codec is not null && _codec.TryUnwrap(@event, out var payload, out var hdrs))
+        if (codec is not null && codec.TryUnwrap(@event, out var payload, out var hdrs))
         {
             body = payload;
             headers = hdrs;
