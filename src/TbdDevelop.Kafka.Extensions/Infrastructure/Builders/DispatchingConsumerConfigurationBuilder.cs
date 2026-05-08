@@ -54,7 +54,7 @@ public class DispatchingConsumerConfigurationBuilder(
         where TEvent : class
         where TConsumer : IEventReceiver<TEvent>
     {
-        if (topic is null && !configuration.TryGetTopicFromEventType<TEvent>(out topic))
+        if (topic is null && !TryGetTopicNameFromEventType<TEvent>(out topic))
         {
             throw new TopicConfigurationException($"No topic found for event type {typeof(TEvent).Name}");
         }
@@ -73,6 +73,15 @@ public class DispatchingConsumerConfigurationBuilder(
         ));
 
         return this;
+    }
+
+    private bool TryGetTopicNameFromEventType<TEvent>(out string? topic)
+    {
+        var type = typeof(TEvent);
+
+        type = type.IsGenericType ? type.GetGenericArguments()[0] : type;
+
+        return configuration.TryGetTopicFromEventType(type, out topic);
     }
 
     public IEventConsumer Build()

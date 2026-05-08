@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TbdDevelop.Kafka.Extensions.Configuration;
+using TbdDevelop.Kafka.Outbox.Configuration;
 
-namespace TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
+namespace TbdDevelop.Kafka.Outbox.Infrastructure.Builders;
 
 public class OutboxPublishingConfigurationBuilder(IServiceCollection services)
 {

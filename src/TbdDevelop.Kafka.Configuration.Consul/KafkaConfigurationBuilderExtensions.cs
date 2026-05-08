@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
-namespace TbdDevelop.Kafka.Configuration.Consul.Infrastructure;
+namespace TbdDevelop.Kafka.Configuration.Consul;
 
 public static partial class KafkaConfigurationBuilderExtensions
 {

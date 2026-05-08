@@ -1,4 +1,4 @@
-namespace TbdDevelop.Kafka.Configuration.Consul.Infrastructure;
+namespace TbdDevelop.Kafka.Configuration.Consul;
 
 public class ConsulConfiguration(string address, string kafkaConfigurationKey, string settingsKey)
 {

@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TbdDevelop.Kafka.Abstractions;
-using TbdDevelop.Kafka.Configuration.Consul.Infrastructure;
+using TbdDevelop.Kafka.Configuration.Consul;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 
 var host = Host.CreateDefaultBuilder()
