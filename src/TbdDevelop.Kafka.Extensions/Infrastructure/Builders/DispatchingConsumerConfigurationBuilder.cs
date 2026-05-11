@@ -16,11 +16,48 @@ public class DispatchingConsumerConfigurationBuilder(
 {
     private readonly List<ITopicConsumer> _consumers = [];
 
-    public DispatchingConsumerConfigurationBuilder AddEventReceiver<TConsumer>(string? topic = null)
-        where TConsumer : IEventReceiver
+    public DispatchingConsumerConfigurationBuilder AddMultiEventReceiver<TReceiver>()
+        where TReceiver : IEventReceiver
+    {
+        var eventTypes = from @interface in typeof(TReceiver).GetInterfaces()
+            where @interface.IsGenericType &&
+                  @interface.GetGenericTypeDefinition() == typeof(IReceive<>)
+            let eventType = @interface?.GetGenericArguments()[0]
+            where eventType is not null
+            select eventType.IsGenericType ? eventType.GetGenericArguments()[0] : eventType;
+
+        var topics = eventTypes.Select(et =>
+            {
+                configuration.TryGetTopicFromEventType(et, out var topic);
+
+                return topic;
+            })
+            .Where(t => t is not null)
+            .Distinct()
+            .ToList();
+
+        if (topics.Count != 1)
+        {
+            throw new ConsumerConfigurationException($"Events for {typeof(TReceiver)} must come from same topic");
+        }
+
+        _consumers.Add(new MultiEventTopicConsumer(
+            topics[0]!,
+            configuration.Consumer,
+            serviceProvider.GetRequiredService<TReceiver>(),
+            loggerFactory.CreateLogger<MultiEventTopicConsumer>(),
+            serviceProvider.GetRequiredService<IEnvelopeCodec>(),
+            serviceProvider.GetRequiredService<IPayloadTypeResolver>()
+        ));
+
+        return this;
+    }
+
+    public DispatchingConsumerConfigurationBuilder AddEventReceiver<TReceiver>()
+        where TReceiver : IEventReceiver
     {
         var eventType =
-            Array.Find(typeof(TConsumer).GetInterfaces(),
+            Array.Find(typeof(TReceiver).GetInterfaces(),
                     m => m.IsGenericType && m.GetGenericTypeDefinition() == typeof(IEventReceiver<>))
                 ?.GetGenericArguments()
                 .FirstOrDefault();
@@ -28,16 +65,16 @@ public class DispatchingConsumerConfigurationBuilder(
         if (eventType is null)
         {
             throw new TopicConfigurationException(
-                $"Event Receiver {typeof(TConsumer).Name} does not implement IEventReceiver<TEvent>");
+                $"Event Receiver {typeof(TReceiver).Name} does not implement IEventReceiver<TEvent>");
         }
 
-        InvokeAddEventReceiver<TConsumer>(eventType, topic);
+        InvokeAddEventReceiver<TReceiver>(eventType);
 
         return this;
     }
 
-    private void InvokeAddEventReceiver<TConsumer>(Type eventType, string? topic)
-        where TConsumer : IEventReceiver
+    private void InvokeAddEventReceiver<TReceiver>(Type eventType)
+        where TReceiver : IEventReceiver
     {
 #pragma warning disable S3011
         var method =
@@ -45,29 +82,24 @@ public class DispatchingConsumerConfigurationBuilder(
                     typeof(DispatchingConsumerConfigurationBuilder)
                         .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance),
                     m => m.Name == nameof(AddEventReceiver) && m.GetGenericArguments().Length > 1)
-                ?.MakeGenericMethod(eventType, typeof(TConsumer));
+                ?.MakeGenericMethod(eventType, typeof(TReceiver));
 
-        method?.Invoke(this, [topic]);
+        method?.Invoke(this, []);
     }
 
-    private DispatchingConsumerConfigurationBuilder AddEventReceiver<TEvent, TConsumer>(string? topic = null)
+    private DispatchingConsumerConfigurationBuilder AddEventReceiver<TEvent, TReceiver>()
         where TEvent : class
-        where TConsumer : IEventReceiver<TEvent>
+        where TReceiver : IEventReceiver<TEvent>
     {
-        if (topic is null && !TryGetTopicNameFromEventType<TEvent>(out topic))
+        if (!TryGetTopicNameFromEventType<TEvent>(out string? topic))
         {
             throw new TopicConfigurationException($"No topic found for event type {typeof(TEvent).Name}");
-        }
-
-        if (topic is not null)
-        {
-            configuration.TryGetTopicByName(topic, out topic);
         }
 
         _consumers.Add(new TopicConsumer<TEvent>(
             topic!,
             configuration.Consumer,
-            serviceProvider.GetRequiredService<TConsumer>(),
+            serviceProvider.GetRequiredService<TReceiver>(),
             loggerFactory.CreateLogger<TopicConsumer<TEvent>>(),
             serviceProvider.GetService<IEnvelopeCodec>()
         ));

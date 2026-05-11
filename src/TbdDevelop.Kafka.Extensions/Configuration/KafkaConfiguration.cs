@@ -8,15 +8,6 @@ public sealed class KafkaConfiguration
     public IDictionary<string, string> Consumer { get; set; } = null!;
     public IEnumerable<TopicConfiguration> Topics { get; set; } = null!;
 
-    public bool TryGetTopicByName(string name, out string? topic)
-    {
-        var topicsByKey = (from t in Topics
-                select new { Name = t.TypeName, Value = t.Name })
-            .ToDictionary(k => k.Name, v => v.Value);
-
-        return topicsByKey.TryGetValue(name, out topic);
-    }
-
     public bool TryGetTopicFromEventType<TEvent>(out string? topic)
     {
         _topicsLookup ??= (from t in Topics

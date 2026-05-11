@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -8,52 +9,33 @@ using TbdDevelop.Kafka.Extensions.Instrumentation;
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
 
-public class TopicConsumer<TEvent>
+public class MultiEventTopicConsumer(
+    string topicToSubscribe,
+    IDictionary<string, string> topicConfiguration,
+    IEventReceiver eventReceiver,
+    ILogger<MultiEventTopicConsumer> logger,
+    IEnvelopeCodec codec,
+    IPayloadTypeResolver resolver)
     : ITopicConsumer
-    where TEvent : class
 {
     private static readonly ActivitySource ActivitySource = new(KafkaInstrumentation.ConsumptionSourceName, "0.0.1");
 
-    public string Topic { get; }
-
-    private readonly IDictionary<string, string> _topicConfiguration;
-    private readonly IEventReceiver<TEvent> _eventReceiver;
-    private readonly ILogger<TopicConsumer<TEvent>> _logger;
-    private readonly IEnvelopeCodec? _codec;
-    private readonly bool _requiresWrap;
-    private readonly Type _payloadType;
-
-    public TopicConsumer(
-        string topicToSubscribe,
-        IDictionary<string, string> topicConfiguration,
-        IEventReceiver<TEvent> eventReceiver,
-        ILogger<TopicConsumer<TEvent>> logger,
-        IEnvelopeCodec? codec = null)
-    {
-        Topic = topicToSubscribe;
-        _topicConfiguration = topicConfiguration;
-        _eventReceiver = eventReceiver;
-        _logger = logger;
-        _codec = codec;
-
-        _payloadType = codec?.GetPayloadType(typeof(TEvent)) ?? typeof(TEvent);
-        _requiresWrap = _payloadType != typeof(TEvent);
-    }
+    public string Topic { get; } = topicToSubscribe;
 
     public async Task Consume(CancellationToken cancellationToken)
     {
         try
         {
-            using var consumer = new ConsumerBuilder<Guid, string>(_topicConfiguration)
+            using var consumer = new ConsumerBuilder<Guid, string>(topicConfiguration)
                 .SetKeyDeserializer(new GuidKeyDeserializer())
                 .SetValueDeserializer(new StringDeserializer())
-                .SetErrorHandler((_, error) => _logger.LogError(error.Reason))
-                .SetLogHandler((_, logMessage) => _logger.LogInformation(logMessage.Message))
+                .SetErrorHandler((_, error) => logger.LogError(error.Reason))
+                .SetLogHandler((_, logMessage) => logger.LogInformation(logMessage.Message))
                 .Build();
 
             consumer.Subscribe(Topic);
 
-            _logger.LogInformation("Starting {ConsumerName}, subscribed to {Topic}", GetType().Name, Topic);
+            logger.LogInformation("Starting {ConsumerName}, subscribed to {Topic}", GetType().Name, Topic);
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -75,7 +57,7 @@ public class TopicConsumer<TEvent>
                 }
                 catch (JsonException ex)
                 {
-                    _logger.LogCritical(ex, "Failed to deserialize message on {Topic}, skipping.", Topic);
+                    logger.LogCritical(ex, "Failed to deserialize message on {Topic}, skipping.", Topic);
 
                     consumer.Commit(result);
                 }
@@ -83,7 +65,7 @@ public class TopicConsumer<TEvent>
         }
         catch (Exception generalException)
         {
-            _logger.LogCritical(generalException, "Consumer Failure for Topic {Topic}", Topic);
+            logger.LogCritical(generalException, "Consumer Failure for Topic {Topic}", Topic);
         }
     }
 
@@ -98,23 +80,37 @@ public class TopicConsumer<TEvent>
 
         if (string.IsNullOrEmpty(result.Message.Value))
         {
-            await _eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
+            await eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
 
             return true;
         }
+        
+        var headers = (result.Message.Headers ?? new Headers())
+            .ToDictionary(h => h.Key, h => h.GetValueBytes());
+        
+        var eventName = Encoding.UTF8.GetString(headers["event-name"]);
 
-        var payload = JsonSerializer.Deserialize(result.Message.Value, _payloadType, DefaultJsonSerializerOptions);
+        if (!resolver.TryResolve(eventName, out var payloadType))
+        {
+            logger.LogError("{Topic} / unresolvable event {EventName}", Topic, eventName);
+            return false;
+        }
+
+        var payload =
+            JsonSerializer.Deserialize(result.Message.Value, payloadType, DefaultJsonSerializerOptions);
 
         if (payload is null)
         {
-            _logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
+            logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
                 Topic,
                 result.Message.Value);
 
             return false;
         }
 
-        await _eventReceiver.ReceiveAsync((TEvent)payload, cancellationToken);
+        var @event = (IEnvelope)codec.Wrap(payload, headers);
+
+        await eventReceiver.ReceiveAsync(@event, cancellationToken);
 
         return true;
     }
