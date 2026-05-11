@@ -3,8 +3,7 @@ using System.Text;
 
 namespace TbdDevelop.Kafka.Abstractions;
 
-public abstract class EnvelopeCodecBase<TEnvelope> : IEnvelopeCodec
-    where TEnvelope : IEnvelope
+public abstract class EnvelopeCodecBase : IEnvelopeCodec
 {
     protected abstract Type EnvelopeOpenType { get; }
 
@@ -16,11 +15,7 @@ public abstract class EnvelopeCodecBase<TEnvelope> : IEnvelopeCodec
         ref object envelope,
         IReadOnlyDictionary<string, byte[]> headers);
 
-    public Type GetPayloadType(Type messageType)
-        => messageType.IsGenericType && messageType.GetGenericTypeDefinition() ==
-            typeof(TEnvelope)
-                ? messageType.GetGenericArguments()[0]
-                : messageType;
+    public abstract Type GetPayloadType(Type messageType);
 
     public bool TryUnwrap(object message, out object payload, out IDictionary<string, byte[]> headers)
     {
