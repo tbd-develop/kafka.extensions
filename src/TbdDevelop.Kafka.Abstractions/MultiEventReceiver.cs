@@ -26,11 +26,11 @@ public abstract class MultiEventReceiver : IEventReceiver
                 select @interface)
             .ToDictionary(k => k.GetGenericArguments()[0], k => k);
 
-        _methods ??= (from @method in GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                where @method.Name == "ReceiveAsync"
-                let parameterType = @method.GetParameters().FirstOrDefault()?.ParameterType
+        _methods ??= (from method in GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                where method.Name == "ReceiveAsync"
+                let parameterType = method.GetParameters().FirstOrDefault()?.ParameterType
                 where parameterType is not null && _interfaces.ContainsKey(parameterType)
-                select new { Key = parameterType, Method = @method })
+                select new { Key = parameterType, Method = method })
             .ToDictionary(k => k.Key, k => k.Method);
     }
 
