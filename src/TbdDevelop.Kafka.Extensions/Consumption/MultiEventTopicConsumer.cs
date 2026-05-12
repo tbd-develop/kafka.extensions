@@ -108,7 +108,7 @@ public class MultiEventTopicConsumer(
             return false;
         }
 
-        var @event = (IEnvelope)codec.Wrap(payload, headers);
+        var @event = codec.Wrap(payload, headers);
 
         await eventReceiver.ReceiveAsync(@event, cancellationToken);
 
