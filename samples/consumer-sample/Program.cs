@@ -11,7 +11,7 @@ using TbdDevelop.Kafka.Services.Infrastructure;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices(services =>
     {
-        services.AddTransient<SampleMultipleEventReceiver>();
+        services.AddScoped<SampleMultipleEventReceiver>();
 
         services.AddKafka()
             .AddDispatchingConsumer(configure => { configure.AddMultiEventReceiver<SampleMultipleEventReceiver>(); })

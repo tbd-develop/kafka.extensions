@@ -35,7 +35,7 @@ public static class OutboxConfigurationBuilderExtensions
             configure.UseNpgsql(options.ConnectionString);
         });
 
-        services.AddTransient<IMessageOutbox, PostgresOutbox>();
+        services.AddScoped<IMessageOutbox, PostgresOutbox>();
     }
 
     public static IHost ConfigureKafkaSqlOutbox(this IHost host)

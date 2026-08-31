@@ -35,7 +35,7 @@ public static class OutboxConfigurationBuilderExtensions
             configure.UseSqlServer(options.ConnectionString);
         });
 
-        services.AddTransient<IMessageOutbox, SqlServerOutbox>();
+        services.AddScoped<IMessageOutbox, SqlServerOutbox>();
     }
 
     public static IHost ConfigureKafkaSqlOutbox(this IHost host)

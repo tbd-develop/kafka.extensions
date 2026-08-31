@@ -29,7 +29,7 @@ public class KafkaInstanceBuilder(IServiceCollection services)
                 .Build();
         });
 
-        services.AddTransient<IEventPublisher, KafkaPublisher>();
+        services.AddScoped<IEventPublisher, KafkaPublisher>();
 
         return this;
     }

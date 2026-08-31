@@ -35,6 +35,6 @@ public static class OutboxConfigurationBuilderExtensions
         });
 
 
-        services.AddTransient<IMessageOutbox, MongoDbOutbox>();
+        services.AddScoped<IMessageOutbox, MongoDbOutbox>();
     }
 }
