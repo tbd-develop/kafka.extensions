@@ -39,8 +39,8 @@ public static class ServiceCollectionExtensions
                     .Build();
             });
             
-            services.AddSingleton<IEventPublisher, OutboxPublisher>();
-            services.AddSingleton<KafkaPublisher>();
+            services.AddScoped<IEventPublisher, OutboxPublisher>();
+            services.AddScoped<KafkaPublisher>();
         });
 
         return builder;
