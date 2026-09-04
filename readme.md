@@ -11,7 +11,7 @@ I always want to clean up using Kafka, and I want to avoid using the consumers /
 I often end up writing pieces to wrap around them that look like this. This is just a result of several attempts to make
 something smoother.
 
-### How do I use it? 
+### How do I use it?
 
 #### Scope
 

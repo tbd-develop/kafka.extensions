@@ -15,7 +15,7 @@ using Testcontainers.MsSql;
 var msSqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
     .Build();
 
-await msSqlContainer.StartAsync(); 
+await msSqlContainer.StartAsync();
 
 var builder = Host.CreateApplicationBuilder();
 

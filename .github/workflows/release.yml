@@ -2,40 +2,40 @@ name: "Release to Nuget"
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-    - name: Build
-      run: dotnet build -c Release
-    - name: Test
-      run: dotnet test -c Release --no-build 
-    - name: Pack Abstractions
-      run: dotnet pack ./src/TbdDevelop.Kafka.Abstractions/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
-    - name: Pack Extensions
-      run: dotnet pack ./src/TbdDevelop.Kafka.Extensions/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
-    - name: Pack Services
-      run: dotnet pack ./src/TbdDevelop.Kafka.Services/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
-    - name: Pack Outbox
-      run: dotnet pack ./src/TbdDevelop.Kafka.Outbox/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .      
-    - name: Pack Consul Extensions
-      run: dotnet pack ./src/TbdDevelop.Kafka.Configuration.Consul/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
-    - name: Pack SqlOutbox
-      run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.SqlServer/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
-    - name: Pack MongoDbOutbox
-      run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.MongoDb/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .      
-    - name: Pack Postgres Outbox
-      run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.Postgres/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .     
-    - name: Push To Nuget
-      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
-    - name: Push To GitHub Packages
-      run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.GH_PACKAGE_TOKEN }} --source https://nuget.pkg.github.com/TbdDevelop/index.json --skip-duplicate      
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build
+        run: dotnet build -c Release
+      - name: Test
+        run: dotnet test -c Release --no-build
+      - name: Pack Abstractions
+        run: dotnet pack ./src/TbdDevelop.Kafka.Abstractions/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack Extensions
+        run: dotnet pack ./src/TbdDevelop.Kafka.Extensions/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack Services
+        run: dotnet pack ./src/TbdDevelop.Kafka.Services/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack Outbox
+        run: dotnet pack ./src/TbdDevelop.Kafka.Outbox/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack Consul Extensions
+        run: dotnet pack ./src/TbdDevelop.Kafka.Configuration.Consul/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack SqlOutbox
+        run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.SqlServer/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack MongoDbOutbox
+        run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.MongoDb/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Pack Postgres Outbox
+        run: dotnet pack ./src/TbdDevelop.Kafka.Outbox.Postgres/ -c Release -p:PackageVersion=${{ github.event.release.tag_name }} --no-build --output .
+      - name: Push To Nuget
+        run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+#      - name: Push To GitHub Packages
+#        run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.GH_PACKAGE_TOKEN }} --source https://nuget.pkg.github.com/TbdDevelop/index.json --skip-duplicate      
