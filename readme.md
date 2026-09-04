@@ -11,7 +11,19 @@ I always want to clean up using Kafka, and I want to avoid using the consumers /
 I often end up writing pieces to wrap around them that look like this. This is just a result of several attempts to make
 something smoother.
 
-### How do I use it?
+### How do I use it? 
+
+#### Scope
+
+By default dependencies are created as Transient (Some Singletons exist). If you want to use Scoped;
+
+```csharp
+.AddKafkaServices(configure => 
+    {
+        configure.ServiceLifetime = ServiceLifetime.Scoped;
+        configure.UseAppSettings("Kafka");
+    })
+```
 
 #### Configuration
 
@@ -60,7 +72,10 @@ If you want to configure your application to Publish events, then you need to ad
 services configuration for Dependency Injection, you need
 
 ```csharp
-services.AddKafka()
+services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
     .AddDefaultPublisher();
 ```
 
@@ -93,7 +108,10 @@ event you wish to receive, you need to register a receiver. In your services con
 need
 
 ```csharp
-services.AddKafka()
+services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
     .AddDispatchingConsumer( configure => {
             configure.AddEventReceiver<ExampleEventReceiver>();
             configure.AddEventReceiver<AnotherEventReceiver>();
@@ -118,7 +136,10 @@ By default, the receiver will be listening to events occuring on the mapped topi
 you have a different configuration for a topic, you can specify the topic name in the arguments;
 
 ```csharp
-services.AddKafka()
+services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
     .AddDispatchingConsumer( configure => {
             configure.AddEventReceiver<ExampleEventReceiver>("my-product.event");
     });
@@ -138,7 +159,10 @@ handlers.
 There is a default worker service available in the services library. With it included, you can add this using
 
 ```csharp
-services.AddKafka()
+services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
     .AddDispatchingConsumer( configure => {
             configure.AddEventReceiver<ExampleEventHandler>();
             configure.AddEventReceiver<AnotherEventHandler>();
@@ -161,7 +185,10 @@ To configure using Outbox instead of using the DefaultPublisher, you need to add
 #### In Memory Outbox
 
 ```csharp
- services.AddKafka()
+ services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
      .AddOutboxPublisher(configure =>
                 {
                     configure
@@ -174,7 +201,10 @@ To configure using Outbox instead of using the DefaultPublisher, you need to add
 To use a persisted outbox, you can include the Outbox.SqlServer package and then configure as such;
 
 ```csharp
-    services.AddKafka()
+    services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
         .AddOutboxPublisher(configure =>
                     {
                         configure
@@ -188,7 +218,10 @@ Another option for the Outbox implementation is the MongoDB Outbox. To use it, y
 package and then configure as such;
 
 ```csharp
-    services.AddKafka()
+    services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
         .AddOutboxPublisher(configure =>
                     {
                         configure
@@ -268,6 +301,9 @@ public class SampleEnvelopeCodec : IEnvelopeCodec
 Once you've defined the codec, you need to setup the codec when configuring the Kafka Extensions;
 
 ```csharp
-    services.AddKafka()
+    services.AddKafkaServices(configure => 
+    {
+        configure.UseAppSettings("Kafka");
+    })
             .WithEnvelopeCodec<SampleEnvelopeCodec>()
 ```
