@@ -9,7 +9,9 @@ public static class TypeExtensions
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public static byte[] Serialize<TEvent>(this TEvent data)
+    public static byte[] Serialize<TEvent>(
+        this TEvent data
+    )
     {
         return JsonSerializer.SerializeToUtf8Bytes(data, Options);
     }

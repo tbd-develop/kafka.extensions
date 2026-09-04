@@ -7,7 +7,9 @@ public class OutboxDbContext(DbContextOptions<OutboxDbContext> options) : DbCont
 {
     public DbSet<OutboxMessageContent> OutboxMessages => Set<OutboxMessageContent>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder
+    )
     {
         modelBuilder
             .HasDefaultSchema("outbox")

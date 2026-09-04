@@ -8,21 +8,18 @@ using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Services.Infrastructure;
 
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
-    {
-        services.AddScoped<SampleMultipleEventReceiver>();
+var host = Host.CreateApplicationBuilder();
 
-        services.AddKafka()
-            .AddDispatchingConsumer(configure => { configure.AddMultiEventReceiver<SampleMultipleEventReceiver>(); })
-            .WithEnvelopeCodec<SampleEnvelopeCodec>()
-            .AddBasicWorkerService();
+host.AddKafkaServices(configure => { configure.ServiceLifetime = ServiceLifetime.Scoped; })
+    .AddDispatchingConsumer(configure => { configure.AddEventReceiver<SampleEventReceiver>(); })
+    .AddBasicWorkerService();
 
-        services.AddSingleton<IPayloadTypeResolver>(new PayloadTypeResolver(new Dictionary<string, Type>
-        {
-            [nameof(SampleEvent)] = typeof(SampleEvent)
-        }));
-    })
-    .Build();
+host.Services.AddScoped<SampleEventReceiver>();
+host.Services.AddSingleton<IPayloadTypeResolver>(new PayloadTypeResolver(new Dictionary<string, Type>
+{
+    [nameof(SampleEvent)] = typeof(SampleEvent)
+}));
 
-await host.RunAsync();
+var application = host.Build();
+
+await application.RunAsync();

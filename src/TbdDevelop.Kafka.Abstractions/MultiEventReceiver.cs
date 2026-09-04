@@ -7,11 +7,14 @@ public abstract class MultiEventReceiver : IEventReceiver
     private IDictionary<Type, Type>? _interfaces;
     private IDictionary<Type, MethodInfo>? _methods;
 
-    public async Task ReceiveAsync(object @event, CancellationToken cancellationToken = default)
+    public async Task ReceiveAsync(
+        object @event,
+        CancellationToken cancellationToken = default
+    )
     {
         PopulateAvailableMethods();
 
-        if (_methods is not null && _methods.TryGetValue(@event.GetType(), out var methodToInvoke))
+        if ( _methods is not null && _methods.TryGetValue(@event.GetType(), out var methodToInvoke) )
         {
             await (Task)methodToInvoke.Invoke(this, [@event, cancellationToken])!;
         }
@@ -34,7 +37,10 @@ public abstract class MultiEventReceiver : IEventReceiver
             .ToDictionary(k => k.Key, k => k.Method);
     }
 
-    public Task DeleteAsync(Guid key, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(
+        Guid key,
+        CancellationToken cancellationToken = default
+    )
     {
         return Task.CompletedTask;
     }

@@ -3,5 +3,8 @@
 public interface ITopicConsumer
 {
     string Topic { get; }
-    Task Consume(CancellationToken cancellationToken);
+
+    Task Consume(
+        CancellationToken cancellationToken
+    );
 }

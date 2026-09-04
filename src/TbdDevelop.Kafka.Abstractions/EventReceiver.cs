@@ -3,13 +3,22 @@ namespace TbdDevelop.Kafka.Abstractions;
 public abstract class EventReceiver<TEvent> : IEventReceiver<TEvent>
     where TEvent : class
 {
-    public abstract Task ReceiveAsync(TEvent @event, CancellationToken cancellationToken = default);
+    public abstract Task ReceiveAsync(
+        TEvent @event,
+        CancellationToken cancellationToken = default
+    );
 
-    public virtual Task DeleteAsync(Guid key, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public virtual Task DeleteAsync(
+        Guid key,
+        CancellationToken cancellationToken = default
+    ) => Task.CompletedTask;
 
-    public Task ReceiveAsync(object @event, CancellationToken cancellationToken = default)
+    public Task ReceiveAsync(
+        object @event,
+        CancellationToken cancellationToken = default
+    )
     {
-        if (@event is TEvent typedEvent)
+        if ( @event is TEvent typedEvent )
         {
             return ReceiveAsync(typedEvent, cancellationToken);
         }

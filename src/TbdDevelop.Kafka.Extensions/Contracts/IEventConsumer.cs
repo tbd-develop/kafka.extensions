@@ -2,5 +2,7 @@
 
 public interface IEventConsumer
 {
-    Task BeginConsumeAsync(CancellationToken cancellationToken = default);
+    Task BeginConsumeAsync(
+        CancellationToken cancellationToken = default
+    );
 }

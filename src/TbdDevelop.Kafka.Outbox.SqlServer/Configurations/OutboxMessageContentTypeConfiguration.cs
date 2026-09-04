@@ -7,7 +7,9 @@ namespace TbdDevelop.Kafka.Outbox.SqlServer.Configurations;
 public class OutboxMessageContentTypeConfiguration
     : IEntityTypeConfiguration<OutboxMessageContent>
 {
-    public void Configure(EntityTypeBuilder<OutboxMessageContent> builder)
+    public void Configure(
+        EntityTypeBuilder<OutboxMessageContent> builder
+    )
     {
         builder.ToTable("KafkaMessagingOutbox");
 

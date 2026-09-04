@@ -2,5 +2,8 @@
 
 public interface IPayloadTypeResolver
 {
-    bool TryResolve(string eventName, out Type payloadType);
+    bool TryResolve(
+        string eventName,
+        out Type payloadType
+    );
 }

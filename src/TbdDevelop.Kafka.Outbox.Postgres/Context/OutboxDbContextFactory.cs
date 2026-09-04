@@ -5,7 +5,9 @@ namespace TbdDevelop.Kafka.Outbox.Postgres.Context;
 
 public class OutboxDbContextFactory : IDesignTimeDbContextFactory<OutboxDbContext>
 {
-    public OutboxDbContext CreateDbContext(string[] args)
+    public OutboxDbContext CreateDbContext(
+        string[] args
+    )
     {
         var optionsBuilder = new DbContextOptionsBuilder<OutboxDbContext>();
 

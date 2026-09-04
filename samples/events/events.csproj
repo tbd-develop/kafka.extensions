@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Abstractions\TbdDevelop.Kafka.Abstractions.csproj" />
+        <ProjectReference Include="..\..\src\TbdDevelop.Kafka.Abstractions\TbdDevelop.Kafka.Abstractions.csproj"/>
     </ItemGroup>
 
 </Project>

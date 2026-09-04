@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Consumption;
@@ -12,7 +13,7 @@ namespace TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 public class DispatchingConsumerConfigurationBuilder(
     IServiceProvider serviceProvider,
     ILoggerFactory loggerFactory,
-    KafkaConfiguration configuration)
+    IOptions<KafkaAppSettings> configuration)
 {
     private readonly List<ITopicConsumer> _consumers = [];
 
@@ -28,7 +29,7 @@ public class DispatchingConsumerConfigurationBuilder(
 
         var topics = eventTypes.Select(et =>
             {
-                configuration.TryGetTopicFromEventType(et, out var topic);
+                configuration.Value.TryGetTopicFromEventType(et, out var topic);
 
                 return topic;
             })
@@ -36,14 +37,14 @@ public class DispatchingConsumerConfigurationBuilder(
             .Distinct()
             .ToList();
 
-        if (topics.Count != 1)
+        if ( topics.Count != 1 )
         {
             throw new ConsumerConfigurationException($"Events for {typeof(TReceiver)} must come from same topic");
         }
 
         _consumers.Add(new MultiEventTopicConsumer(
             topics[0]!,
-            configuration.Consumer,
+            configuration.Value.Consumer,
             serviceProvider.GetRequiredService<TReceiver>(),
             loggerFactory.CreateLogger<MultiEventTopicConsumer>(),
             serviceProvider.GetRequiredService<IEnvelopeCodec>(),
@@ -62,7 +63,7 @@ public class DispatchingConsumerConfigurationBuilder(
                 ?.GetGenericArguments()
                 .FirstOrDefault();
 
-        if (eventType is null)
+        if ( eventType is null )
         {
             throw new TopicConfigurationException(
                 $"Event Receiver {typeof(TReceiver).Name} does not implement IEventReceiver<TEvent>");
@@ -73,7 +74,9 @@ public class DispatchingConsumerConfigurationBuilder(
         return this;
     }
 
-    private void InvokeAddEventReceiver<TReceiver>(Type eventType)
+    private void InvokeAddEventReceiver<TReceiver>(
+        Type eventType
+    )
         where TReceiver : IEventReceiver
     {
 #pragma warning disable S3011
@@ -91,14 +94,14 @@ public class DispatchingConsumerConfigurationBuilder(
         where TEvent : class
         where TReceiver : IEventReceiver<TEvent>
     {
-        if (!TryGetTopicNameFromEventType<TEvent>(out string? topic))
+        if ( !TryGetTopicNameFromEventType<TEvent>(out string? topic) )
         {
             throw new TopicConfigurationException($"No topic found for event type {typeof(TEvent).Name}");
         }
 
         _consumers.Add(new TopicConsumer<TEvent>(
             topic!,
-            configuration.Consumer,
+            configuration.Value.Consumer,
             serviceProvider.GetRequiredService<TReceiver>(),
             loggerFactory.CreateLogger<TopicConsumer<TEvent>>(),
             serviceProvider.GetService<IEnvelopeCodec>()
@@ -107,13 +110,15 @@ public class DispatchingConsumerConfigurationBuilder(
         return this;
     }
 
-    private bool TryGetTopicNameFromEventType<TEvent>(out string? topic)
+    private bool TryGetTopicNameFromEventType<TEvent>(
+        out string? topic
+    )
     {
         var type = typeof(TEvent);
 
         type = type.IsGenericType ? type.GetGenericArguments()[0] : type;
 
-        return configuration.TryGetTopicFromEventType(type, out topic);
+        return configuration.Value.TryGetTopicFromEventType(type, out topic);
     }
 
     public IEventConsumer Build()

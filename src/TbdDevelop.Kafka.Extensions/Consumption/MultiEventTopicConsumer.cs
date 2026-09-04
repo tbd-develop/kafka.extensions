@@ -22,7 +22,9 @@ public class MultiEventTopicConsumer(
 
     public string Topic { get; } = topicToSubscribe;
 
-    public async Task Consume(CancellationToken cancellationToken)
+    public async Task Consume(
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -37,25 +39,25 @@ public class MultiEventTopicConsumer(
 
             logger.LogInformation("Starting {ConsumerName}, subscribed to {Topic}", GetType().Name, Topic);
 
-            while (!cancellationToken.IsCancellationRequested)
+            while ( !cancellationToken.IsCancellationRequested )
             {
                 var result = consumer.Consume(cancellationToken);
 
-                if (result.Message is null)
+                if ( result.Message is null )
                 {
                     continue;
                 }
 
                 try
                 {
-                    if (!await HandleMessage(result, cancellationToken))
+                    if ( !await HandleMessage(result, cancellationToken) )
                     {
                         continue;
                     }
 
                     consumer.Commit(result);
                 }
-                catch (JsonException ex)
+                catch ( JsonException ex )
                 {
                     logger.LogCritical(ex, "Failed to deserialize message on {Topic}, skipping.", Topic);
 
@@ -63,13 +65,16 @@ public class MultiEventTopicConsumer(
                 }
             }
         }
-        catch (Exception generalException)
+        catch ( Exception generalException )
         {
             logger.LogCritical(generalException, "Consumer Failure for Topic {Topic}", Topic);
         }
     }
 
-    private async Task<bool> HandleMessage(ConsumeResult<Guid, string> result, CancellationToken cancellationToken)
+    private async Task<bool> HandleMessage(
+        ConsumeResult<Guid, string> result,
+        CancellationToken cancellationToken
+    )
     {
         using var activity = ActivitySource.StartActivity($"kafka.consume {Topic}", ActivityKind.Consumer);
 
@@ -78,19 +83,19 @@ public class MultiEventTopicConsumer(
         activity?.SetTag("messaging.kafka.partition", result.Partition.Value);
         activity?.SetTag("messaging.kafka.offset", result.Offset.Value);
 
-        if (string.IsNullOrEmpty(result.Message.Value))
+        if ( string.IsNullOrEmpty(result.Message.Value) )
         {
             await eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
 
             return true;
         }
-        
+
         var headers = (result.Message.Headers ?? new Headers())
             .ToDictionary(h => h.Key, h => h.GetValueBytes());
-        
+
         var eventName = Encoding.UTF8.GetString(headers["event-name"]);
 
-        if (!resolver.TryResolve(eventName, out var payloadType))
+        if ( !resolver.TryResolve(eventName, out var payloadType) )
         {
             logger.LogError("{Topic} / unresolvable event {EventName}", Topic, eventName);
             return false;
@@ -99,7 +104,7 @@ public class MultiEventTopicConsumer(
         var payload =
             JsonSerializer.Deserialize(result.Message.Value, payloadType, DefaultJsonSerializerOptions);
 
-        if (payload is null)
+        if ( payload is null )
         {
             logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
                 Topic,

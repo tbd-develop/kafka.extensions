@@ -1,6 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-
 using events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,25 +12,22 @@ using TbdDevelop.Kafka.Outbox.SqlServer.Extensions;
 using TbdDevelop.Kafka.Outbox.SqlServer.Infrastructure;
 using Testcontainers.MsSql;
 
-var msSqlContainer = new MsSqlBuilder()
-    .WithImage("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
+var msSqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
     .Build();
 
-await msSqlContainer.StartAsync();
+await msSqlContainer.StartAsync(); 
 
-var builder = Host.CreateDefaultBuilder()
-    .ConfigureServices((_, services) =>
+var builder = Host.CreateApplicationBuilder();
+
+builder.AddKafkaServices(configure => configure.UseAppSettings("Kafka"))
+    .AddOutboxPublisher(configure =>
     {
-        services.AddKafka()
-            .AddOutboxPublisher(configure =>
-            {
-                configure
-                    .UseSqlServerOutbox(new OutboxConfigurationOptions(msSqlContainer.GetConnectionString()));
-            })
-            .AddOutboxPublishingService(configure =>
-            {
-                configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(15); });
-            });
+        configure
+            .UseSqlServerOutbox(new OutboxConfigurationOptions(msSqlContainer.GetConnectionString()));
+    })
+    .AddOutboxPublishingService(configure =>
+    {
+        configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(15); });
     });
 
 var app = builder.Build();

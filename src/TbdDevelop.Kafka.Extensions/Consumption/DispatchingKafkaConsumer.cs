@@ -13,7 +13,9 @@ public class DispatchingKafkaConsumer(
 
     private readonly IDictionary<string, int> _retryCounter = new ConcurrentDictionary<string, int>();
 
-    public async Task BeginConsumeAsync(CancellationToken cancellationToken = default)
+    public async Task BeginConsumeAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var tasks = consumers
             .Select(consumer =>
@@ -27,23 +29,26 @@ public class DispatchingKafkaConsumer(
         await Task.WhenAll(tasks);
     }
 
-    private async Task RunWithRetry(ITopicConsumer consumer, CancellationToken cancellationToken)
+    private async Task RunWithRetry(
+        ITopicConsumer consumer,
+        CancellationToken cancellationToken
+    )
     {
         _retryCounter.TryAdd(consumer.Topic, 0);
 
-        while (!cancellationToken.IsCancellationRequested)
+        while ( !cancellationToken.IsCancellationRequested )
         {
             try
             {
                 await consumer.Consume(cancellationToken);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested )
             {
                 return;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                if (_retryCounter[consumer.Topic] >= Backoff)
+                if ( _retryCounter[consumer.Topic] >= Backoff )
                 {
                     return;
                 }

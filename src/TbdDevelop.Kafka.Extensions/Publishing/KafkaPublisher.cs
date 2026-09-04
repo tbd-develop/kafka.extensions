@@ -2,6 +2,7 @@
 using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
@@ -11,7 +12,7 @@ namespace TbdDevelop.Kafka.Extensions.Publishing;
 
 public class KafkaPublisher(
     ILogger<KafkaPublisher> logger,
-    KafkaConfiguration configuration,
+    IOptions<KafkaAppSettings> configuration,
     IProducer<Guid, byte[]> producer,
     IEnvelopeCodec? codec = null)
     : IEventPublisher, IAsyncDisposable
@@ -19,14 +20,18 @@ public class KafkaPublisher(
     private readonly ILogger _logger = logger;
     private static readonly ActivitySource ActivitySource = new(KafkaInstrumentation.PublishingSourceName, "0.0.1");
 
-    public async Task PublishAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PublishAsync<TEvent>(
+        Guid key,
+        TEvent @event,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         try
         {
             var (body, headers) = FetchBodyFromEnvelope(@event);
 
-            if (!configuration.TryGetTopicFromEventType(body.GetType(), out string? topic))
+            if ( !configuration.Value.TryGetTopicFromEventType(body.GetType(), out string? topic) )
             {
                 _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
@@ -35,25 +40,32 @@ public class KafkaPublisher(
 
             await PublishInternalAsync(key, body, headers, topic!, cancellationToken);
         }
-        catch (ArgumentNullException exception)
+        catch ( ArgumentNullException exception )
         {
             _logger.LogCritical(exception, "Configuration does not provide topic for {EventType}",
                 typeof(TEvent).Name);
         }
     }
 
-    public async Task PublishAsync<TEvent>(Guid key, TEvent @event, string topic,
-        CancellationToken cancellationToken = default) where TEvent : class
+    public async Task PublishAsync<TEvent>(
+        Guid key,
+        TEvent @event,
+        string topic,
+        CancellationToken cancellationToken = default
+    ) where TEvent : class
     {
         var (body, headers) = FetchBodyFromEnvelope(@event);
 
         await PublishInternalAsync(key, body, headers, topic!, cancellationToken);
     }
 
-    public async Task PublishDeleteAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+    public async Task PublishDeleteAsync<TEvent>(
+        Guid key,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
-        if (!configuration.TryGetTopicFromEventType<TEvent>(out string? topic))
+        if ( !configuration.Value.TryGetTopicFromEventType<TEvent>(out string? topic) )
         {
             _logger.LogCritical("No topic found for event type {EventType}", typeof(TEvent).Name);
 
@@ -63,7 +75,11 @@ public class KafkaPublisher(
         await PublishDeleteAsync<TEvent>(key, topic!, cancellationToken);
     }
 
-    public async Task PublishDeleteAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+    public async Task PublishDeleteAsync<TEvent>(
+        Guid key,
+        string topic,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await producer.ProduceAsync(topic,
@@ -79,7 +95,8 @@ public class KafkaPublisher(
         object @event,
         IDictionary<string, byte[]>? headers,
         string topic,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var sw = Stopwatch.StartNew();
 
@@ -101,10 +118,12 @@ public class KafkaPublisher(
         }
     }
 
-    private static Message<Guid, byte[]> ConstructMessage(Guid key,
+    private static Message<Guid, byte[]> ConstructMessage(
+        Guid key,
         object @event,
         string topic,
-        IDictionary<string, byte[]>? headers)
+        IDictionary<string, byte[]>? headers
+    )
     {
         using var activity = ActivitySource.StartActivity($"kafka.publish {topic}", ActivityKind.Producer);
         activity?.SetTag("messaging.system", "kafka");
@@ -120,19 +139,19 @@ public class KafkaPublisher(
             Value = @event.Serialize()
         };
 
-        if (headers is not { Count: > 0 })
+        if ( headers is not { Count: > 0 } )
         {
             return message;
         }
 
         message.Headers = [];
 
-        foreach (var (name, value) in headers)
+        foreach ( var (name, value) in headers )
         {
             message.Headers.Add(name, value);
         }
 
-        if (activity is not null)
+        if ( activity is not null )
         {
             DistributedContextPropagator.Current.Inject(activity, headers, (carrier, k, v) =>
                 ((IDictionary<string, byte[]>)carrier!)[k] = Encoding.UTF8.GetBytes(v));
@@ -149,14 +168,17 @@ public class KafkaPublisher(
         await Task.CompletedTask;
     }
 
-    private static Timestamp ResolveTimestamp(object body, IDictionary<string, byte[]>? headers)
+    private static Timestamp ResolveTimestamp(
+        object body,
+        IDictionary<string, byte[]>? headers
+    )
     {
-        if (headers is not null && headers.TryGetValue("occurred-at", out var raw))
+        if ( headers is not null && headers.TryGetValue("occurred-at", out var raw) )
         {
             return new Timestamp(DateTimeOffset.Parse(Encoding.UTF8.GetString(raw)).UtcDateTime);
         }
 
-        if (body is IEvent e)
+        if ( body is IEvent e )
         {
             return new Timestamp(e.OccurredOn);
         }
@@ -164,13 +186,15 @@ public class KafkaPublisher(
         return new Timestamp(DateTime.UtcNow);
     }
 
-    private (object body, IDictionary<string, byte[]>? headers) FetchBodyFromEnvelope<TEvent>(TEvent @event)
+    private (object body, IDictionary<string, byte[]>? headers) FetchBodyFromEnvelope<TEvent>(
+        TEvent @event
+    )
         where TEvent : class
     {
         object body;
         IDictionary<string, byte[]>? headers = null;
 
-        if (codec is not null && codec.TryUnwrap(@event, out var payload, out var hdrs))
+        if ( codec is not null && codec.TryUnwrap(@event, out var payload, out var hdrs) )
         {
             body = payload;
             headers = hdrs;

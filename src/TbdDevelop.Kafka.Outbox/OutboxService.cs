@@ -17,7 +17,9 @@ public class OutboxService(
     ILogger<OutboxService> logger,
     IOptions<OutboxPublishingConfiguration> options) : BackgroundService
 {
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(
+        CancellationToken stoppingToken
+    )
     {
         var configuration = options.Value;
 
@@ -35,9 +37,9 @@ public class OutboxService(
 
                     var message = await outbox.RetrieveNextMessage(stoppingToken);
 
-                    if (message is not null)
+                    if ( message is not null )
                     {
-                        if (message.Event is not null)
+                        if ( message.Event is not null )
                         {
                             await PublishMessage(message, stoppingToken);
                         }
@@ -53,9 +55,9 @@ public class OutboxService(
 
                     delayTime = configuration.Interval;
                 }
-                catch (Exception exception)
+                catch ( Exception exception )
                 {
-                    if (delayTime < configuration.MaximumBackOff)
+                    if ( delayTime < configuration.MaximumBackOff )
                     {
                         delayTime += configuration.BackOffOnException;
                     }
@@ -65,16 +67,19 @@ public class OutboxService(
                 }
 
                 await Task.Delay(delayTime, stoppingToken);
-            } while (!stoppingToken.IsCancellationRequested);
+            } while ( !stoppingToken.IsCancellationRequested );
         }, TaskCreationOptions.LongRunning | TaskCreationOptions.AttachedToParent);
     }
 
-    private async Task PublishMessage(IOutboxMessage message, CancellationToken cancellationToken)
+    private async Task PublishMessage(
+        IOutboxMessage message,
+        CancellationToken cancellationToken
+    )
     {
         var method =
             typeof(OutboxService).GetMethod(nameof(PublishEvent), BindingFlags.NonPublic | BindingFlags.Instance);
 
-        if (method is null)
+        if ( method is null )
         {
             throw new InvalidOperationException("Unable to publish message");
         }
@@ -84,12 +89,15 @@ public class OutboxService(
         await (Task)genericMethod.Invoke(this, [message.Key, message.Event, message.Topic, cancellationToken])!;
     }
 
-    private async Task PublishDeleteMessage(IOutboxMessage message, CancellationToken cancellationToken)
+    private async Task PublishDeleteMessage(
+        IOutboxMessage message,
+        CancellationToken cancellationToken
+    )
     {
         var method =
             typeof(OutboxService).GetMethod(nameof(PublishDelete), BindingFlags.NonPublic | BindingFlags.Instance);
 
-        if (method is null)
+        if ( method is null )
         {
             throw new InvalidOperationException("Unable to publish message");
         }
@@ -99,10 +107,15 @@ public class OutboxService(
         await (Task)genericMethod.Invoke(this, [message.Key, message.Topic, cancellationToken])!;
     }
 
-    private async Task PublishEvent<TEvent>(Guid key, TEvent @event, string? topic, CancellationToken cancellationToken)
+    private async Task PublishEvent<TEvent>(
+        Guid key,
+        TEvent @event,
+        string? topic,
+        CancellationToken cancellationToken
+    )
         where TEvent : class
     {
-        if (topic is not null)
+        if ( topic is not null )
         {
             await publisher.PublishAsync(key, @event, topic, cancellationToken);
         }
@@ -112,10 +125,14 @@ public class OutboxService(
         }
     }
 
-    private async Task PublishDelete<TEvent>(Guid key, string? topic, CancellationToken cancellationToken)
+    private async Task PublishDelete<TEvent>(
+        Guid key,
+        string? topic,
+        CancellationToken cancellationToken
+    )
         where TEvent : class
     {
-        if (topic is not null)
+        if ( topic is not null )
         {
             await publisher.PublishDeleteAsync<TEvent>(key, topic, cancellationToken);
         }

@@ -5,11 +5,13 @@ namespace TbdDevelop.Kafka.Configuration.Consul;
 
 public class ConsulClient(HttpClient client)
 {
-    public async Task<ConsulTopicsConfiguration> GetConfiguration(string key)
+    public async Task<ConsulTopicsConfiguration> GetConfiguration(
+        string key
+    )
     {
         var response = await client.GetAsync($"/v1/kv/{key}?raw");
 
-        if (!response.IsSuccessStatusCode)
+        if ( !response.IsSuccessStatusCode )
         {
             throw new Exception($"Failed to get configuration from Consul. Status code: {response.StatusCode}");
         }

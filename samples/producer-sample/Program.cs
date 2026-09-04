@@ -5,17 +5,16 @@ using Microsoft.Extensions.Hosting;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
-    {
-        services
-            .AddKafka()
-            .AddDefaultPublisher()
-            .WithEnvelopeCodec<SampleEnvelopeCodec>();
-    })
-    .Build();
+var builder = Host.CreateApplicationBuilder();
 
-var publisher = host.Services.GetRequiredService<IEventPublisher>();
+builder
+    .AddKafkaServices()
+    .AddDefaultPublisher()
+    .WithEnvelopeCodec<SampleEnvelopeCodec>();
+
+var application = builder.Build();
+
+var publisher = application.Services.GetRequiredService<IEventPublisher>();
 
 await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello World", SomeOtherValue = 42 });
 
@@ -36,4 +35,5 @@ await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid());
 
 await publisher.PublishDeleteAsync<SampleEvent>(Guid.NewGuid(), "configured.topic");
 
-await host.RunAsync();
+
+await application.RunAsync();

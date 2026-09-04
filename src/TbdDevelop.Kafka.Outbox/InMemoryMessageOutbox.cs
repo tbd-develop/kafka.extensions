@@ -8,7 +8,10 @@ public class InMemoryMessageOutbox : IMessageOutbox
 {
     private readonly ConcurrentDictionary<Guid, IOutboxMessage> _outbox = new();
 
-    public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await Task.Run(() =>
@@ -19,7 +22,11 @@ public class InMemoryMessageOutbox : IMessageOutbox
         });
     }
 
-    public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        TEvent @event,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await Task.Run(() =>
@@ -30,7 +37,11 @@ public class InMemoryMessageOutbox : IMessageOutbox
         }, cancellationToken);
     }
 
-    public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        string topic,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await Task.Run(() =>
@@ -41,8 +52,12 @@ public class InMemoryMessageOutbox : IMessageOutbox
         });
     }
 
-    public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
-        CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        TEvent @event,
+        string topic,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await Task.Run(() =>
@@ -53,7 +68,9 @@ public class InMemoryMessageOutbox : IMessageOutbox
         }, cancellationToken);
     }
 
-    public Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
+    public Task<IOutboxMessage?> RetrieveNextMessage(
+        CancellationToken cancellationToken = default
+    )
     {
         return Task.Run(() =>
         {
@@ -65,11 +82,14 @@ public class InMemoryMessageOutbox : IMessageOutbox
         }, cancellationToken);
     }
 
-    public Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
+    public Task Commit(
+        IOutboxMessage message,
+        CancellationToken cancellationToken = default
+    )
     {
         return Task.Run(() =>
         {
-            if (message is not IInMemoryOutboxMessage inMemoryMessage)
+            if ( message is not IInMemoryOutboxMessage inMemoryMessage )
                 return;
 
             _outbox.TryRemove(inMemoryMessage.Id, out _);

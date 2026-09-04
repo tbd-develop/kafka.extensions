@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
@@ -15,7 +16,7 @@ public class when_fetching_topic_and_event_is_enveloped
     private readonly ILogger<KafkaPublisher> _logger = Substitute.For<ILogger<KafkaPublisher>>();
     private readonly IEnvelopeCodec _codec = Substitute.For<IEnvelopeCodec>();
     private readonly IProducer<Guid, byte[]> _producer = Substitute.For<IProducer<Guid, byte[]>>();
-    private KafkaConfiguration _configuration = null!;
+    private IOptions<KafkaAppSettings> _configuration = null!;
     private KafkaPublisher _subject = null!;
 
     private readonly Guid _identifier = Guid.NewGuid();
@@ -44,14 +45,14 @@ public class when_fetching_topic_and_event_is_enveloped
             { "name", Encoding.UTF8.GetBytes(_envelopeName) }
         };
 
-        _configuration = new KafkaConfiguration()
+        _configuration = new OptionsWrapper<KafkaAppSettings>(new KafkaAppSettings()
         {
             Producer = new Dictionary<string, string>() { },
             Topics = new List<TopicConfiguration>
             {
                 new() { Name = _topicName, TypeName = typeof(SampleEvent).AssemblyQualifiedName! }
             }
-        };
+        });
 
         _subject = new KafkaPublisher(
             _logger,

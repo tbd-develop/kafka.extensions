@@ -2,14 +2,14 @@
 
 [![Release to Nuget](https://github.com/tbd-develop/kafka.extensions/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/tbd-develop/kafka.extensions/actions/workflows/release.yml)
 
-This library contains a set of tools I use often to work with Apache Kafka. More specifically,
-it's build off of the Confluent Kafka library.
+This library contains a set of tools I use often to work with Apache Kafka. More specifically, it's build off of the
+Confluent Kafka library.
 
 ### Why?
 
-I always want to clean up using Kafka, and I want to avoid using the consumers / producer components
-in all my code. So, I often end up writing pieces to wrap around them that look like this. This is just
-a result of several attempts to make something smoother.
+I always want to clean up using Kafka, and I want to avoid using the consumers / producer components in all my code. So,
+I often end up writing pieces to wrap around them that look like this. This is just a result of several attempts to make
+something smoother.
 
 ### How do I use it?
 
@@ -42,17 +42,18 @@ First you're going to need the configuration set up. Add a node to your appsetti
 ```
 
 Obviously, if you're publishing, then you need Producer. Consuming, you need consumer. In either case you need the
-topics
-configured that you're going to use.
+topics configured that you're going to use.
 
 Here, the events that we're publishing / consuming live in a shared events library that you're application knows about.
 
 The configuration under consumer and producer are standard Kafka configuration value options. If you can pass them to a
-Kafka
-producer on consumer, you can put them in here.
+Kafka producer on consumer, you can put them in here.
 
-** Note - If you do not disable auto commit with  ``"enable.auto.commit": "false"`` in your configuration, Kafka will auto commit your messages periodically (See [Confluent Documentation](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)). A message you've received that errors may already be committed, and therefore skipped on restart.
- 
+** Note - If you do not disable auto commit with  ``"enable.auto.commit": "false"`` in your configuration, Kafka will
+auto commit your messages periodically
+(See [Confluent Documentation](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)).
+A message you've received that errors may already be committed, and therefore skipped on restart.
+
 #### Publishing (Producers)
 
 If you want to configure your application to Publish events, then you need to add the production components. So, in your
@@ -82,14 +83,14 @@ public class MyService
 }
 ```    
 
-Where ExampleEvent is a class that implements IEvent. DefaultEvent is an abstract implementation
-of IEvent to use as a base class.
+Where ExampleEvent is a class that implements IEvent. DefaultEvent is an abstract implementation of IEvent to use as a
+base class.
 
 #### Consuming (Consumers)
 
 If you want to configure your application to consume events, then you need to add the consumer components. For each
-event you wish to receive,
-you need to register a receiver. In your services configuration for Dependency Injection, you need
+event you wish to receive, you need to register a receiver. In your services configuration for Dependency Injection, you
+need
 
 ```csharp
 services.AddKafka()
@@ -113,8 +114,8 @@ public class ExampleEventReceiver : EventReceiver<ExampleEvent>
 
 ```
 
-By default, the receiver will be listening to events occuring on the mapped topic based on the event type. However, 
-if you have a different configuration for a topic, you can specify the topic name in the arguments;
+By default, the receiver will be listening to events occuring on the mapped topic based on the event type. However, if
+you have a different configuration for a topic, you can specify the topic name in the arguments;
 
 ```csharp
 services.AddKafka()
@@ -123,8 +124,8 @@ services.AddKafka()
     });
 ```
 
-Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons
-as each receiver will be attached to a single running consumer process.
+Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons as each receiver
+will be attached to a single running consumer process.
 
 ```csharp
 services.AddSingleton<ExampleEventReceiver>();
@@ -147,8 +148,9 @@ services.AddKafka()
 
 This will add a hosted service and then start consuming when the service starts.
 
-A task is created per Topic to process and will run in parallel. A retry process is wrapped around consumption
- to pause if there is a minor issue. After three attempts it will give up. If auto commit is not disabled, this will likely move to the next message.
+A task is created per Topic to process and will run in parallel. A retry process is wrapped around consumption to pause
+if there is a minor issue. After three attempts it will give up. If auto commit is not disabled, this will likely move
+to the next message.
 
 ### Outbox
 
@@ -179,10 +181,11 @@ To use a persisted outbox, you can include the Outbox.SqlServer package and then
                             .UseSqlServerOutbox("connection-string");
                     });
 ```
-    
+
 #### MongoDB Outbox
 
-Another option for the Outbox implementation is the MongoDB Outbox. To use it, you need to include the Outbox.MongoDB package and then configure as such;
+Another option for the Outbox implementation is the MongoDB Outbox. To use it, you need to include the Outbox.MongoDB
+package and then configure as such;
 
 ```csharp
     services.AddKafka()
@@ -197,7 +200,8 @@ If you try and use the default publisher and the outbox, you will get an excepti
 
 #### Envelope
 
-If you need to deliver multiple event types to a single topic, you can use an Envelope. Multiple Publishers -> Single Topic -> Single Consumer. 
+If you need to deliver multiple event types to a single topic, you can use an Envelope. Multiple Publishers -> Single
+Topic -> Single Consumer.
 
 To create an enveloped message, you define the Envelope;
 

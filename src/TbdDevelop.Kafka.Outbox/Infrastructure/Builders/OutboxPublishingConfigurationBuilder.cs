@@ -5,7 +5,9 @@ namespace TbdDevelop.Kafka.Outbox.Infrastructure.Builders;
 
 public class OutboxPublishingConfigurationBuilder(IServiceCollection services)
 {
-    public OutboxPublishingConfigurationBuilder WithSettings(Action<OutboxPublishingConfiguration> configure)
+    public OutboxPublishingConfigurationBuilder WithSettings(
+        Action<OutboxPublishingConfiguration> configure
+    )
     {
         services.Configure(configure);
 

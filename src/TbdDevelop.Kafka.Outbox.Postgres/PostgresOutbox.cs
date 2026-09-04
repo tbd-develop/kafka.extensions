@@ -14,7 +14,10 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public async Task PostAsync<TEvent>(Guid key, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
@@ -30,7 +33,11 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task PostAsync<TEvent>(Guid key, TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        TEvent @event,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
@@ -46,7 +53,11 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task PostAsync<TEvent>(Guid key, string topic, CancellationToken cancellationToken = default)
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        string topic,
+        CancellationToken cancellationToken = default
+    )
         where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
@@ -63,8 +74,12 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task PostAsync<TEvent>(Guid key, TEvent @event, string topic,
-        CancellationToken cancellationToken = default) where TEvent : class
+    public async Task PostAsync<TEvent>(
+        Guid key,
+        TEvent @event,
+        string topic,
+        CancellationToken cancellationToken = default
+    ) where TEvent : class
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
@@ -80,7 +95,9 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IOutboxMessage?> RetrieveNextMessage(CancellationToken cancellationToken = default)
+    public async Task<IOutboxMessage?> RetrieveNextMessage(
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
@@ -92,11 +109,13 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
         return message is null ? null : BuildOutboxMessage(message);
     }
 
-    private IOutboxMessage? BuildOutboxMessage(OutboxMessageContent message)
+    private IOutboxMessage? BuildOutboxMessage(
+        OutboxMessageContent message
+    )
     {
         var type = Type.GetType(message.Type);
 
-        if (type is null)
+        if ( type is null )
         {
             return null;
         }
@@ -110,11 +129,14 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
             message.Id, message.Key, message.DateAdded, @event, message.Topic)!;
     }
 
-    public async Task Commit(IOutboxMessage message, CancellationToken cancellationToken = default)
+    public async Task Commit(
+        IOutboxMessage message,
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
-        if (message is not ISqlOutboxMessage sqlMessage)
+        if ( message is not ISqlOutboxMessage sqlMessage )
         {
             return;
         }
@@ -123,7 +145,7 @@ public class PostgresOutbox(IDbContextFactory<OutboxDbContext> factory) : IMessa
             await context.OutboxMessages.FirstOrDefaultAsync(m =>
                 m.Id == sqlMessage.Id, cancellationToken);
 
-        if (current is null)
+        if ( current is null )
         {
             return;
         }

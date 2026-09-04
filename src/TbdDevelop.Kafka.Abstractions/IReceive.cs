@@ -3,5 +3,8 @@
 public interface IReceive<in TEvent>
     where TEvent : class
 {
-    Task ReceiveAsync(TEvent @event, CancellationToken cancellationToken = default);
+    Task ReceiveAsync(
+        TEvent @event,
+        CancellationToken cancellationToken = default
+    );
 }

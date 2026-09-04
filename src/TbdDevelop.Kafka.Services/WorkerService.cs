@@ -5,7 +5,9 @@ namespace TbdDevelop.Kafka.Services;
 
 public class WorkerService(IEventConsumer consumer) : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(
+        CancellationToken stoppingToken
+    )
     {
         await consumer.BeginConsumeAsync(stoppingToken);
     }

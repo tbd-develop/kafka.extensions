@@ -5,20 +5,23 @@ using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Configuration.Consul;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
+var builder = Host.CreateApplicationBuilder();
+
+builder.AddKafkaServices(configure =>
     {
-        services.AddKafka(configure =>
-            {
-                configure.UsingConsul(new ConsulConfiguration(
-                    "http://localhost:8599",
-                    "Kafka",
-                    "kafka-configuration"));
-            })
-            .AddDefaultPublisher();
+        configure.ServiceLifetime = ServiceLifetime.Scoped;
+        
+        configure.UseAppSettings("Kafka");
+        
+        configure.UsingConsul(new ConsulConfiguration(
+            "http://devstation:8500",
+            "Kafka",
+            "kafka-configuration"));
     })
-    .Build();
+    .AddDefaultPublisher();
+
+var host = builder.Build();
 
 var publisher = host.Services.GetRequiredService<IEventPublisher>();
 
-await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello World", SomeOtherValue = 42 });
+await publisher.PublishAsync(Guid.NewGuid(), new SampleEvent { SomeValue = "Hello From Consul Configuration", SomeOtherValue = 42 });

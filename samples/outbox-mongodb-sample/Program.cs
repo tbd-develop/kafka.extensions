@@ -10,26 +10,23 @@ using TbdDevelop.Kafka.Outbox.MongoDb.Extensions;
 using TbdDevelop.Kafka.Outbox.MongoDb.Infrastructure;
 using Testcontainers.MongoDb;
 
-var mongoDbContainer = new MongoDbBuilder()
-    .WithImage("mongodb/mongodb-community-server:latest")
+var mongoDbContainer = new MongoDbBuilder("mongodb/mongodb-community-server:8.0.4-ubuntu2204")
     .Build();
 
 await mongoDbContainer.StartAsync();
 
-var builder = Host.CreateDefaultBuilder()
-    .ConfigureServices((_, services) =>
+var builder = Host.CreateApplicationBuilder();
+
+builder.AddKafkaServices(configure => configure.UseAppSettings("Kafka"))
+    .AddOutboxPublisher(configure =>
     {
-        services.AddKafka()
-            .AddOutboxPublisher(configure =>
-            {
-                configure
-                    .UseMongoDbOutbox(
-                        new OutboxConfigurationOptions(mongoDbContainer.GetConnectionString(), "test-database"));
-            })
-            .AddOutboxPublishingService(configure =>
-            {
-                configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(15); });
-            });
+        configure
+            .UseMongoDbOutbox(
+                new OutboxConfigurationOptions(mongoDbContainer.GetConnectionString(), "test-database"));
+    })
+    .AddOutboxPublishingService(configure =>
+    {
+        configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(15); });
     });
 
 var app = builder.Build();

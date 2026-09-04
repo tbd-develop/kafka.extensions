@@ -28,7 +28,8 @@ public class TopicConsumer<TEvent>
         IDictionary<string, string> topicConfiguration,
         IEventReceiver<TEvent> eventReceiver,
         ILogger<TopicConsumer<TEvent>> logger,
-        IEnvelopeCodec? codec = null)
+        IEnvelopeCodec? codec = null
+    )
     {
         Topic = topicToSubscribe;
         _topicConfiguration = topicConfiguration;
@@ -40,7 +41,9 @@ public class TopicConsumer<TEvent>
         _requiresWrap = _payloadType != typeof(TEvent);
     }
 
-    public async Task Consume(CancellationToken cancellationToken)
+    public async Task Consume(
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -55,25 +58,25 @@ public class TopicConsumer<TEvent>
 
             _logger.LogInformation("Starting {ConsumerName}, subscribed to {Topic}", GetType().Name, Topic);
 
-            while (!cancellationToken.IsCancellationRequested)
+            while ( !cancellationToken.IsCancellationRequested )
             {
                 var result = consumer.Consume(cancellationToken);
 
-                if (result.Message is null)
+                if ( result.Message is null )
                 {
                     continue;
                 }
 
                 try
                 {
-                    if (!await HandleMessage(result, cancellationToken))
+                    if ( !await HandleMessage(result, cancellationToken) )
                     {
                         continue;
                     }
 
                     consumer.Commit(result);
                 }
-                catch (JsonException ex)
+                catch ( JsonException ex )
                 {
                     _logger.LogCritical(ex, "Failed to deserialize message on {Topic}, skipping.", Topic);
 
@@ -81,13 +84,16 @@ public class TopicConsumer<TEvent>
                 }
             }
         }
-        catch (Exception generalException)
+        catch ( Exception generalException )
         {
             _logger.LogCritical(generalException, "Consumer Failure for Topic {Topic}", Topic);
         }
     }
 
-    private async Task<bool> HandleMessage(ConsumeResult<Guid, string> result, CancellationToken cancellationToken)
+    private async Task<bool> HandleMessage(
+        ConsumeResult<Guid, string> result,
+        CancellationToken cancellationToken
+    )
     {
         using var activity = ActivitySource.StartActivity($"kafka.consume {Topic}", ActivityKind.Consumer);
 
@@ -96,7 +102,7 @@ public class TopicConsumer<TEvent>
         activity?.SetTag("messaging.kafka.partition", result.Partition.Value);
         activity?.SetTag("messaging.kafka.offset", result.Offset.Value);
 
-        if (string.IsNullOrEmpty(result.Message.Value))
+        if ( string.IsNullOrEmpty(result.Message.Value) )
         {
             await _eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
 
@@ -105,7 +111,7 @@ public class TopicConsumer<TEvent>
 
         var payload = JsonSerializer.Deserialize(result.Message.Value, _payloadType, DefaultJsonSerializerOptions);
 
-        if (payload is null)
+        if ( payload is null )
         {
             _logger.LogError("{TopicToSubscribe} / {Message} message could not be deserialized",
                 Topic,

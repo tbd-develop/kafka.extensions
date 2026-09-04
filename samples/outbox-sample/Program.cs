@@ -5,20 +5,24 @@ using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Outbox.Infrastructure;
 
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
+var builder = Host.CreateApplicationBuilder();
+
+builder.AddKafkaServices(configure =>
     {
-        services.AddKafka()
-            .AddOutboxPublisher(configure =>
-            {
-                configure
-                    .UseInMemoryOutbox();
-            }).AddOutboxPublishingService(configure =>
-            {
-                configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(10); });
-            });
+        configure.ServiceLifetime = ServiceLifetime.Scoped;
+        
+        configure.UseAppSettings("Kafka");
     })
-    .Build();
+    .AddOutboxPublisher(configure =>
+    {
+        configure
+            .UseInMemoryOutbox();
+    }).AddOutboxPublishingService(configure =>
+    {
+        configure.WithSettings(settings => { settings.Interval = TimeSpan.FromSeconds(10); });
+    });
+
+var host = builder.Build();
 
 var publisher = host.Services.GetRequiredService<IEventPublisher>();
 

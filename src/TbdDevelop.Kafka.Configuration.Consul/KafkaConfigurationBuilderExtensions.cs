@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
@@ -7,36 +9,43 @@ namespace TbdDevelop.Kafka.Configuration.Consul;
 
 public static partial class KafkaConfigurationBuilderExtensions
 {
-    public static KafkaConfigurationBuilder UsingConsul(this KafkaConfigurationBuilder builder,
-        ConsulConfiguration configuration)
+    extension<THostApplicationBuilder>(
+        KafkaInstanceBuilder<THostApplicationBuilder> builder
+    )
+        where THostApplicationBuilder : IHostApplicationBuilder
     {
-        builder.Register(services =>
+        public KafkaInstanceBuilder<THostApplicationBuilder> UsingConsul(
+            ConsulConfiguration configuration
+        )
         {
-            services.AddHttpClient<ConsulClient>(client =>
+            builder.Register(services =>
             {
-                client.BaseAddress = new Uri(configuration.Address);
+                services.AddHttpClient<ConsulClient>(client =>
+                {
+                    client.BaseAddress = new Uri(configuration.Address);
+                });
+
+                services.AddSingleton<IOptions<KafkaAppSettings>>(provider =>
+                {
+                    var client = provider.GetRequiredService<ConsulClient>();
+                    var appConfiguration = provider.GetRequiredService<IConfiguration>();
+
+                    var config = new KafkaAppSettings();
+
+                    appConfiguration
+                        .GetSection(configuration.KafkaAppSettingsSectionName)
+                        .Bind(config);
+
+                    config.Topics = client.GetConfiguration(configuration.Key)
+                        .GetAwaiter()
+                        .GetResult()
+                        .Topics;
+
+                    return new OptionsWrapper<KafkaAppSettings>(config);
+                });
             });
 
-            services.AddSingleton<KafkaConfiguration>(provider =>
-            {
-                var client = provider.GetRequiredService<ConsulClient>();
-                var appConfiguration = provider.GetRequiredService<IConfiguration>();
-
-                var config = new KafkaConfiguration();
-
-                appConfiguration
-                    .GetSection(configuration.KafkaAppSettingsSectionName)
-                    .Bind(config);
-
-                config.Topics = client.GetConfiguration(configuration.Key)
-                    .GetAwaiter()
-                    .GetResult()
-                    .Topics;
-
-                return config;
-            });
-        });
-
-        return builder;
+            return builder;
+        }
     }
 }

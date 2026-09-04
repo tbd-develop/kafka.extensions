@@ -8,7 +8,9 @@ namespace TbdDevelop.Kafka.Outbox.MongoDb.Configurations;
 public class OutboxMessageContentTypeConfiguration
     : IEntityTypeConfiguration<OutboxMessageContent>
 {
-    public void Configure(EntityTypeBuilder<OutboxMessageContent> builder)
+    public void Configure(
+        EntityTypeBuilder<OutboxMessageContent> builder
+    )
     {
         builder.ToCollection("kafka-messaging-outbox");
     }
