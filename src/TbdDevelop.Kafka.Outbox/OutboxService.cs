@@ -3,8 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TbdDevelop.Kafka.Abstractions;
-using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Publishing;
 using TbdDevelop.Kafka.Outbox.Configuration;
 using TbdDevelop.Kafka.Outbox.Contracts;
@@ -13,10 +11,10 @@ namespace TbdDevelop.Kafka.Outbox;
 
 public class OutboxService(
     IServiceScopeFactory scopeFactory,
-    KafkaPublisher publisher,
     ILogger<OutboxService> logger,
     IOptions<OutboxPublishingConfiguration> options) : BackgroundService
 {
+
     protected override Task ExecuteAsync(
         CancellationToken stoppingToken
     )
@@ -34,6 +32,7 @@ public class OutboxService(
                     await using var scope = scopeFactory.CreateAsyncScope();
 
                     var outbox = scope.ServiceProvider.GetRequiredService<IMessageOutbox>();
+                    var publisher = scope.ServiceProvider.GetRequiredService<KafkaPublisher>();
 
                     var message = await outbox.RetrieveNextMessage(stoppingToken);
 
@@ -41,11 +40,11 @@ public class OutboxService(
                     {
                         if ( message.Event is not null )
                         {
-                            await PublishMessage(message, stoppingToken);
+                            await PublishMessage(publisher, message, stoppingToken);
                         }
                         else
                         {
-                            await PublishDeleteMessage(message, stoppingToken);
+                            await PublishDeleteMessage(publisher, message, stoppingToken);
                         }
 
                         await outbox.Commit(message, stoppingToken);
@@ -72,6 +71,7 @@ public class OutboxService(
     }
 
     private async Task PublishMessage(
+        KafkaPublisher publisher,
         IOutboxMessage message,
         CancellationToken cancellationToken
     )
@@ -86,10 +86,11 @@ public class OutboxService(
 
         var genericMethod = method.MakeGenericMethod(message.EventType);
 
-        await (Task)genericMethod.Invoke(this, [message.Key, message.Event, message.Topic, cancellationToken])!;
+        await (Task)genericMethod.Invoke(this, [publisher, message.Key, message.Event, message.Topic, cancellationToken])!;
     }
 
     private async Task PublishDeleteMessage(
+        KafkaPublisher publisher,
         IOutboxMessage message,
         CancellationToken cancellationToken
     )
@@ -104,10 +105,11 @@ public class OutboxService(
 
         var genericMethod = method.MakeGenericMethod(message.EventType);
 
-        await (Task)genericMethod.Invoke(this, [message.Key, message.Topic, cancellationToken])!;
+        await (Task)genericMethod.Invoke(this, [publisher, message.Key, message.Topic, cancellationToken])!;
     }
 
     private async Task PublishEvent<TEvent>(
+        KafkaPublisher publisher,
         Guid key,
         TEvent @event,
         string? topic,
@@ -126,6 +128,7 @@ public class OutboxService(
     }
 
     private async Task PublishDelete<TEvent>(
+        KafkaPublisher publisher,
         Guid key,
         string? topic,
         CancellationToken cancellationToken

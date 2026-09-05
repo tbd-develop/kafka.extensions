@@ -18,7 +18,7 @@ public static class BuilderExtensions
 
             configure?.Invoke(instanceBuilder);
 
-            return instanceBuilder;
+            return instanceBuilder.Build();
         }
     }
 }

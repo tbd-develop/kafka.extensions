@@ -15,7 +15,7 @@ public class KafkaPublisher(
     IOptions<KafkaAppSettings> configuration,
     IProducer<Guid, byte[]> producer,
     IEnvelopeCodec? codec = null)
-    : IEventPublisher, IAsyncDisposable
+    : IEventPublisher
 {
     private readonly ILogger _logger = logger;
     private static readonly ActivitySource ActivitySource = new(KafkaInstrumentation.PublishingSourceName, "0.0.1");

@@ -12,20 +12,12 @@ using TbdDevelop.Kafka.Extensions.Serializers;
 
 namespace TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
-public class KafkaInstanceBuilder<THostApplicationBuilder>
+public class KafkaInstanceBuilder<THostApplicationBuilder>(THostApplicationBuilder builder)
     where THostApplicationBuilder : IHostApplicationBuilder
 {
     public ServiceLifetime ServiceLifetime { get; set; } = ServiceLifetime.Transient;
-    private IKafkaServiceCollection ServiceCollection { get; }
-    private IConfiguration Configuration { get; }
-
-    public KafkaInstanceBuilder(
-        THostApplicationBuilder builder
-    )
-    {
-        Configuration = builder.Configuration;
-        ServiceCollection = new KafkaServiceCollection(ServiceLifetime, builder.Services);
-    }
+    private IKafkaServiceCollection ServiceCollection { get; set; }
+    private IConfiguration Configuration { get; set; }
 
     public KafkaInstanceBuilder<THostApplicationBuilder> UseAppSettings(
         string sectionName
@@ -107,6 +99,15 @@ public class KafkaInstanceBuilder<THostApplicationBuilder>
     )
     {
         configure(ServiceCollection);
+
+        return this;
+    }
+
+    public KafkaInstanceBuilder<THostApplicationBuilder> Build()
+    {
+        Configuration = builder.Configuration;
+
+        ServiceCollection = new KafkaServiceCollection(ServiceLifetime, builder.Services);
 
         return this;
     }
