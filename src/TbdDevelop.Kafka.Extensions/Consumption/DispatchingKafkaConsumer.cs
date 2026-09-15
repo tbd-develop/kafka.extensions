@@ -1,12 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Extensions.Contracts;
+using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
 
 public class DispatchingKafkaConsumer(
     ILogger<DispatchingKafkaConsumer> logger,
-    IEnumerable<ITopicConsumer> consumers) : IEventConsumer
+    TopicConsumerFactory factory) : IEventConsumer
 {
     private const int TimeoutSeconds = 5;
     private const int Backoff = 3;
@@ -17,7 +18,7 @@ public class DispatchingKafkaConsumer(
         CancellationToken cancellationToken = default
     )
     {
-        var tasks = consumers
+        var tasks = factory.Create()
             .Select(consumer =>
                 Task.Factory.StartNew(
                     () => RunWithRetry(consumer, cancellationToken),

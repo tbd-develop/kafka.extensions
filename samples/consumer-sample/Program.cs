@@ -10,11 +10,18 @@ using TbdDevelop.Kafka.Services.Infrastructure;
 
 var host = Host.CreateApplicationBuilder();
 
-host.AddKafkaServices(configure => { configure.ServiceLifetime = ServiceLifetime.Scoped; })
-    .AddDispatchingConsumer(configure => { configure.AddEventReceiver<SampleEventReceiver>(); })
+host.AddKafkaServices(configure =>
+    {
+        configure.ServiceLifetime = ServiceLifetime.Scoped;
+
+        configure.UseAppSettings("Kafka");
+    })
+    .AddDispatchingConsumer(configure =>
+    {
+        configure.AddEventReceiver<SampleEventReceiver>();
+    })
     .AddBasicWorkerService();
 
-host.Services.AddScoped<SampleEventReceiver>();
 host.Services.AddSingleton<IPayloadTypeResolver>(new PayloadTypeResolver(new Dictionary<string, Type>
 {
     [nameof(SampleEvent)] = typeof(SampleEvent)

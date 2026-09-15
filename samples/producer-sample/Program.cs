@@ -8,7 +8,10 @@ using TbdDevelop.Kafka.Extensions.Infrastructure;
 var builder = Host.CreateApplicationBuilder();
 
 builder
-    .AddKafkaServices()
+    .AddKafkaServices(configure =>
+    {
+        configure.UseAppSettings("Kafka");
+    })
     .AddDefaultPublisher()
     .WithEnvelopeCodec<SampleEnvelopeCodec>();
 

@@ -145,17 +145,6 @@ services.AddKafkaServices(configure =>
     });
 ```
 
-Your receivers should be added to DI before kafka configuration, it's ok to register them as singletons as each receiver
-will be attached to a single running consumer process.
-
-```csharp
-services.AddSingleton<ExampleEventReceiver>();
-services.AddSingleton<AnotherEventReceiver>();
-```
-
-But, once configured, when the consumers are started, and an event is received then they'll be dispatched to the
-handlers.
-
 There is a default worker service available in the services library. With it included, you can add this using
 
 ```csharp
@@ -307,3 +296,13 @@ Once you've defined the codec, you need to setup the codec when configuring the 
     })
             .WithEnvelopeCodec<SampleEnvelopeCodec>()
 ```
+
+To define a receiver of multiple events;
+```csharp
+public class SampleMultipleEventReceiver 
+     : MultiEventReceiver,
+IReceive<Event1>,
+IReceive<Event2>
+```
+
+This will provide methods for receiving the messages from the same topic and distribute the individual events

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
+using TbdDevelop.Kafka.Extensions.Consumption;
 using TbdDevelop.Kafka.Extensions.Contracts;
 using TbdDevelop.Kafka.Extensions.Publishing;
 using TbdDevelop.Kafka.Extensions.Serializers;
@@ -16,16 +17,28 @@ public class KafkaInstanceBuilder<THostApplicationBuilder>(THostApplicationBuild
     where THostApplicationBuilder : IHostApplicationBuilder
 {
     public ServiceLifetime ServiceLifetime { get; set; } = ServiceLifetime.Transient;
-    private IKafkaServiceCollection ServiceCollection { get; set; }
-    private IConfiguration Configuration { get; set; }
+    private IKafkaServiceCollection ServiceCollection { get; set; } = null!;
+    private IConfiguration Configuration { get; set; } = null!;
+    private string _appSettingsSectionName = null!;
+
+    public KafkaInstanceBuilder<THostApplicationBuilder> Build()
+    {
+        Configuration = builder.Configuration;
+
+        ServiceCollection = new KafkaServiceCollection(ServiceLifetime, builder.Services);
+
+        ServiceCollection.Configure<KafkaAppSettings>(
+            Configuration.GetSection(_appSettingsSectionName)
+        );
+
+        return this;
+    }
 
     public KafkaInstanceBuilder<THostApplicationBuilder> UseAppSettings(
         string sectionName
     )
     {
-        ServiceCollection.Configure<KafkaAppSettings>(
-            Configuration.GetSection(sectionName)
-        );
+        _appSettingsSectionName = sectionName;
 
         return this;
     }
@@ -46,10 +59,16 @@ public class KafkaInstanceBuilder<THostApplicationBuilder>(THostApplicationBuild
     }
 
     public KafkaInstanceBuilder<THostApplicationBuilder> AddDispatchingConsumer(
-        Action<DispatchingConsumerConfigurationBuilder> configure
+        Action<DispatchingConsumerBuilder> configure
     )
     {
-        RegisterDispatchingConsumer(ServiceCollection, configure);
+        var consumerBuilder = new DispatchingConsumerBuilder(ServiceCollection);
+
+        configure(consumerBuilder);
+
+        ServiceCollection.AddSingleton(consumerBuilder.Build());
+        ServiceCollection.AddSingleton<TopicConsumerFactory>();
+        ServiceCollection.AddSingleton<IEventConsumer, DispatchingKafkaConsumer>();
 
         return this;
     }
@@ -74,24 +93,7 @@ public class KafkaInstanceBuilder<THostApplicationBuilder>(THostApplicationBuild
                 .Build();
         });
 
-        services.AddInServiceLifetime<IEventPublisher, KafkaPublisher>();
-    }
-
-    private void RegisterDispatchingConsumer(
-        IServiceCollection services,
-        Action<DispatchingConsumerConfigurationBuilder> configure
-    )
-    {
-        services.AddSingleton<DispatchingConsumerConfigurationBuilder>();
-        services.AddSingleton<IEventConsumer>(provider =>
-        {
-            var consumerConfigurationBuilder =
-                provider.GetRequiredService<DispatchingConsumerConfigurationBuilder>();
-
-            configure(consumerConfigurationBuilder);
-
-            return consumerConfigurationBuilder.Build();
-        });
+        services.AddSingleton<IEventPublisher, KafkaPublisher>();
     }
 
     public KafkaInstanceBuilder<THostApplicationBuilder> Register(
@@ -99,15 +101,6 @@ public class KafkaInstanceBuilder<THostApplicationBuilder>(THostApplicationBuild
     )
     {
         configure(ServiceCollection);
-
-        return this;
-    }
-
-    public KafkaInstanceBuilder<THostApplicationBuilder> Build()
-    {
-        Configuration = builder.Configuration;
-
-        ServiceCollection = new KafkaServiceCollection(ServiceLifetime, builder.Services);
 
         return this;
     }

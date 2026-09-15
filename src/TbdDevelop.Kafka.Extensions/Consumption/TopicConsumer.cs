@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 using Confluent.Kafka;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Deserializers;
@@ -8,34 +9,35 @@ using TbdDevelop.Kafka.Extensions.Instrumentation;
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;
 
-public class TopicConsumer<TEvent>
+public class TopicConsumer<TEvent, TReceiver>
     : ITopicConsumer
     where TEvent : class
+    where TReceiver : class, IEventReceiver<TEvent>
 {
     private static readonly ActivitySource ActivitySource = new(KafkaInstrumentation.ConsumptionSourceName, "0.0.1");
 
     public string Topic { get; }
 
     private readonly IDictionary<string, string> _topicConfiguration;
-    private readonly IEventReceiver<TEvent> _eventReceiver;
-    private readonly ILogger<TopicConsumer<TEvent>> _logger;
+    private readonly ILogger<TopicConsumer<TEvent, TReceiver>> _logger;
     private readonly IEnvelopeCodec? _codec;
     private readonly bool _requiresWrap;
     private readonly Type _payloadType;
+    private readonly IServiceScopeFactory _factory;
 
     public TopicConsumer(
         string topicToSubscribe,
         IDictionary<string, string> topicConfiguration,
-        IEventReceiver<TEvent> eventReceiver,
-        ILogger<TopicConsumer<TEvent>> logger,
+        IServiceScopeFactory factory,
+        ILogger<TopicConsumer<TEvent, TReceiver>> logger,
         IEnvelopeCodec? codec = null
     )
     {
         Topic = topicToSubscribe;
         _topicConfiguration = topicConfiguration;
-        _eventReceiver = eventReceiver;
         _logger = logger;
         _codec = codec;
+        _factory = factory;
 
         _payloadType = codec?.GetPayloadType(typeof(TEvent)) ?? typeof(TEvent);
         _requiresWrap = _payloadType != typeof(TEvent);
@@ -102,9 +104,13 @@ public class TopicConsumer<TEvent>
         activity?.SetTag("messaging.kafka.partition", result.Partition.Value);
         activity?.SetTag("messaging.kafka.offset", result.Offset.Value);
 
+        await using var scope = _factory.CreateAsyncScope();
+
+        var receiver = scope.ServiceProvider.GetRequiredService<IEventReceiver<TEvent>>();
+
         if ( string.IsNullOrEmpty(result.Message.Value) )
         {
-            await _eventReceiver.DeleteAsync(result.Message.Key, cancellationToken);
+            await receiver.DeleteAsync(result.Message.Key, cancellationToken);
 
             return true;
         }
@@ -120,7 +126,7 @@ public class TopicConsumer<TEvent>
             return false;
         }
 
-        await _eventReceiver.ReceiveAsync((TEvent)payload, cancellationToken);
+        await receiver.ReceiveAsync((TEvent)payload, cancellationToken);
 
         return true;
     }
