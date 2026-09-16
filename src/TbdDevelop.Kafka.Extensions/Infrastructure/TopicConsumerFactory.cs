@@ -5,10 +5,10 @@ using Microsoft.Extensions.Options;
 using TbdDevelop.Kafka.Abstractions;
 using TbdDevelop.Kafka.Extensions.Configuration;
 using TbdDevelop.Kafka.Extensions.Consumption;
-using TbdDevelop.Kafka.Extensions.Contracts;
+using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Exceptions;
 
-namespace TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
+namespace TbdDevelop.Kafka.Extensions.Infrastructure;
 
 public class TopicConsumerFactory(
     DispatchingConsumerOptions options,

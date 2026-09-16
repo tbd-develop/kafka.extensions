@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using TbdDevelop.Kafka.Extensions.Contracts;
+using TbdDevelop.Kafka.Extensions.Infrastructure;
 using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Extensions.Consumption;

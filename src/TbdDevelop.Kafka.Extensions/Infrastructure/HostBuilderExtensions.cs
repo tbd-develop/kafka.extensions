@@ -3,7 +3,7 @@ using TbdDevelop.Kafka.Extensions.Infrastructure.Builders;
 
 namespace TbdDevelop.Kafka.Extensions.Infrastructure;
 
-public static class BuilderExtensions
+public static class HostBuilderExtensions
 {
     extension<THostApplicationBuilder>(
         THostApplicationBuilder builder

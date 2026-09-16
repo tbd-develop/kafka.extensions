@@ -12,12 +12,11 @@ builder.AddKafkaServices(configure =>
         configure.ServiceLifetime = ServiceLifetime.Scoped;
 
         configure.UseAppSettings("Kafka");
-
-        configure.UsingConsul(new ConsulConfiguration(
-            "http://devstation:8500",
-            "Kafka",
-            "kafka-configuration"));
     })
+    .UsingConsul(new ConsulConfiguration(
+        "http://devstation:8500",
+        "Kafka",
+        "kafka-configuration"))
     .AddDefaultPublisher();
 
 var host = builder.Build();
