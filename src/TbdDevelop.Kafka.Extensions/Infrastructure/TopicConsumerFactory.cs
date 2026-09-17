@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices.Marshalling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,14 +23,14 @@ public class TopicConsumerFactory(
         {
             var topic = FetchTopicFromEventTypes(eventTypes);
 
-            if ( eventTypes.Count > 1 )
+            if ( receiverType.IsSubclassOf(typeof(MultiEventReceiver)) )
             {
                 var genericMethod = GetType()
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                     .SingleOrDefault(m => m is { IsGenericMethod: true, Name: nameof(BuildMultiEventReceiver) })!
                     .MakeGenericMethod(receiverType);
 
-                yield return (ITopicConsumer)genericMethod?.Invoke(this, [topic])!;
+                yield return (ITopicConsumer)genericMethod.Invoke(this, [topic])!;
             }
             else
             {
@@ -38,7 +39,7 @@ public class TopicConsumerFactory(
                     .SingleOrDefault(m => m is { IsGenericMethod: true, Name: nameof(BuilderSingleEventReceiver) })!
                     .MakeGenericMethod(receiverType);
 
-                yield return (ITopicConsumer)genericMethod?.Invoke(this, [eventTypes.ElementAt(0), topic])!;
+                yield return (ITopicConsumer)genericMethod.Invoke(this, [eventTypes.ElementAt(0), topic])!;
             }
         }
     }
@@ -88,7 +89,7 @@ public class TopicConsumerFactory(
             Array.Find(
                     typeof(TopicConsumerFactory)
                         .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance),
-                    m => m.Name == nameof(FetchEventReceiver) && m.GetGenericArguments().Length > 1)
+                    m => m.Name == nameof(BuildTopicConsumer) && m.GetGenericArguments().Length > 1)
                 ?.MakeGenericMethod(eventType, typeof(TReceiver));
 
         if ( method is null )
@@ -99,7 +100,7 @@ public class TopicConsumerFactory(
         return (ITopicConsumer)method.Invoke(this, [topic])!;
     }
 
-    private ITopicConsumer FetchEventReceiver<TEvent, TReceiver>(
+    private ITopicConsumer BuildTopicConsumer<TEvent, TReceiver>(
         string topic
     )
         where TEvent : class

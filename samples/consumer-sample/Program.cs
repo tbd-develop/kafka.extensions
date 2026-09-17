@@ -19,7 +19,9 @@ host.AddKafkaServices(configure =>
     .AddDispatchingConsumer(configure =>
     {
         configure.AddEventReceiver<SampleEventReceiver>();
+        configure.AddEventReceiver<SampleMultipleEventReceiver>();
     })
+    .WithEnvelopeCodec<SampleEnvelopeCodec>()
     .AddBasicWorkerService();
 
 host.Services.AddSingleton<IPayloadTypeResolver>(new PayloadTypeResolver(new Dictionary<string, Type>

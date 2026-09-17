@@ -17,7 +17,7 @@ public class DispatchingConsumerBuilder(
         var eventTypes =
             new ReadOnlyCollection<Type>([.. GetMessageTypes<TReceiver>()]);
 
-        RegisterEventReceiver<TReceiver>(eventTypes.ElementAt(0));
+        RegisterEventReceiver<TReceiver>();
 
         AddConsumerRegistration(typeof(TReceiver), eventTypes);
 
@@ -39,28 +39,10 @@ public class DispatchingConsumerBuilder(
         }
     }
 
-    private void RegisterEventReceiver<TReceiver>(
-        Type eventType
-    )
+    private void RegisterEventReceiver<TReceiver>()
         where TReceiver : class, IEventReceiver
     {
-        var method = GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-            .Where(m => m.GetGenericArguments().Length > 1)
-            .SingleOrDefault(m => m is { IsGenericMethod: true, Name: "RegisterEventReceiver" })?
-            .MakeGenericMethod(
-                typeof(IEventReceiver<>).MakeGenericType(eventType),
-                typeof(TReceiver)
-            );
-
-        method?.Invoke(this, []);
-    }
-    
-    [UsedImplicitly]
-    private void RegisterEventReceiver<TService, TImplementation>()
-        where TService : class
-        where TImplementation : class, TService
-    {
-        collection.AddInServiceLifetime<TService, TImplementation>();
+        collection.AddInServiceLifetime<TReceiver>();
     }
 
     private IEnumerable<Type> GetMessageTypes<TReceiver>()
