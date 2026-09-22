@@ -84,7 +84,7 @@ public class KafkaInstanceBuilder<THostApplicationBuilder>(THostApplicationBuild
         {
             var configuration = provider.GetRequiredService<IOptions<KafkaAppSettings>>();
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger<KafkaPublisher>();
+            var logger = loggerFactory.CreateLogger<KafkaInstanceBuilder<THostApplicationBuilder>>();
 
             return new ProducerBuilder<Guid, byte[]>(configuration.Value.Producer)
                 .SetLogHandler((_, logMessage) => logger.LogInformation("{Message}", logMessage.Message))

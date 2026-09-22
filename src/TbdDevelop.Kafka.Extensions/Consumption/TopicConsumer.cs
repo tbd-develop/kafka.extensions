@@ -106,7 +106,7 @@ public class TopicConsumer<TEvent, TReceiver>
 
         await using var scope = _factory.CreateAsyncScope();
 
-        var receiver = scope.ServiceProvider.GetRequiredService<IEventReceiver<TEvent>>();
+        var receiver = scope.ServiceProvider.GetRequiredService<TReceiver>();
 
         if ( string.IsNullOrEmpty(result.Message.Value) )
         {
